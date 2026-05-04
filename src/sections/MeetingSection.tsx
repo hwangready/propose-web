@@ -49,10 +49,10 @@ export default function MeetingSection({ isActive }: Props) {
             )}
           </AnimatePresence>
           <div style={{ position: 'absolute', left: '8%', top: 40 }}>
-            <PolaroidFrame src="사진4.jpg" caption="그 날의 기억" rotate={-6} width={195} photoHeight={170} showRope ropeLength={36} draggable />
+            <PolaroidFrame src="https://picsum.photos/seed/couple4/400/400" caption="그 날의 기억" rotate={-6} width={195} photoHeight={170} showRope ropeLength={36} draggable />
           </div>
           <div style={{ position: 'absolute', left: '38%', top: 60 }}>
-            <PolaroidFrame src="사진5.jpg" caption="함께였던 우리" rotate={5} width={195} photoHeight={170} showRope ropeLength={36} draggable />
+            <PolaroidFrame src="https://picsum.photos/seed/couple5/400/400" caption="함께였던 우리" rotate={5} width={195} photoHeight={170} showRope ropeLength={36} draggable />
           </div>
         </motion.div>
       </div>

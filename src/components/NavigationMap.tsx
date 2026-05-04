@@ -6,9 +6,10 @@ interface Props {
 }
 
 const CELLS: [number, number][] = [
-  [0, 0], [0, 1],
-  [1, 0], [1, 1],
-  [2, 0], [2, 1],
+  [0, 0], [0, 1], [0, 2],
+  [1, 0], [1, 1], [1, 2],
+  [2, 0], [2, 1], [2, 2],
+  [3, 0], [3, 1], [3, 2],
 ];
 
 export default function NavigationMap({ pos, goTo }: Props) {
@@ -25,8 +26,8 @@ export default function NavigationMap({ pos, goTo }: Props) {
         borderRadius: 8,
         padding: 10,
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 8px)',
-        gridTemplateRows: 'repeat(3, 8px)',
+        gridTemplateColumns: 'repeat(3, 8px)',
+        gridTemplateRows: 'repeat(4, 8px)',
         gap: 6,
         border: '1px solid rgba(255,255,255,0.06)',
       }}

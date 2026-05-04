@@ -3,18 +3,91 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motio
 
 interface Props { isActive: boolean }
 
-const CONFETTI_COLORS = ['#e05c7a', '#7db8a0', '#ffb3c6', '#b5d9c9', '#ffffff', '#f9d6df'];
 const NO_MESSAGES = ['정말...? 💕', '한 번 더 생각해봐', '나 슬퍼지잖아 😢', '마지막 기회야... 💍', '제발... 🥺'];
 
-interface Particle { x:number;y:number;vx:number;vy:number;color:string;angle:number;angVel:number;w:number;h:number;opacity:number }
+const PETAL_COLORS = ['#ffb3c6', '#e05c7a', '#f9d6df', '#ffe4e4', '#fff', '#ffcad4'];
+
+const SLIDE_PHOTOS = Array.from({ length: 12 }, (_, i) =>
+  `https://picsum.photos/seed/couple${i + 1}/900/600`
+);
+
+interface Petal { x:number; y:number; vx:number; vy:number; color:string; angle:number; angVel:number; rx:number; ry:number; opacity:number }
+
+function playChime() {
+  try {
+    const ac = new AudioContext();
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.connect(g); g.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ac.currentTime + i * 0.14;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+      osc.start(t); osc.stop(t + 1.4);
+    });
+    setTimeout(() => ac.close(), 2500);
+  } catch { /* ignore */ }
+}
+
+function playBGM(): () => void {
+  try {
+    const ac = new AudioContext();
+    // G장조 코드 진행: G-Em-C-D 루프 (각 2초)
+    const chords = [
+      [392, 494, 587],  // G
+      [330, 392, 494],  // Em
+      [262, 330, 392],  // C
+      [294, 370, 440],  // D
+    ];
+    let stopped = false;
+    let loop = 0;
+
+    function playChord(notes: number[], time: number) {
+      notes.forEach(freq => {
+        const osc = ac.createOscillator();
+        const g = ac.createGain();
+        osc.connect(g); g.connect(ac.destination);
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, time);
+        g.gain.linearRampToValueAtTime(0.04, time + 0.15);
+        g.gain.setValueAtTime(0.04, time + 1.6);
+        g.gain.linearRampToValueAtTime(0, time + 2.0);
+        osc.start(time); osc.stop(time + 2.0);
+      });
+    }
+
+    function scheduleLoop() {
+      if (stopped) return;
+      const now = ac.currentTime;
+      chords.forEach((chord, i) => {
+        playChord(chord, now + i * 2);
+      });
+      loop++;
+      setTimeout(scheduleLoop, 7800);
+    }
+    scheduleLoop();
+
+    return () => {
+      stopped = true;
+      ac.close();
+    };
+  } catch {
+    return () => {};
+  }
+}
 
 export default function FinaleSection({ isActive }: Props) {
   const [answered, setAnswered] = useState(false);
   const [noCount, setNoCount] = useState(0);
+  const [slideIdx, setSlideIdx] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  // 💍 커서 추적
+  // 커서 추적
   const ringRawX = useMotionValue(0);
   const ringRawY = useMotionValue(0);
   const ringX = useSpring(ringRawX, { stiffness: 60, damping: 10 });
@@ -45,30 +118,44 @@ export default function FinaleSection({ isActive }: Props) {
   };
   const handleYesLeave = () => { yesBtnX.set(0); yesBtnY.set(0); };
 
-  const triggerConfetti = useCallback(() => {
+  // 꽃잎 canvas 애니메이션
+  const triggerPetals = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const cx = canvas.width / 2; const cy = canvas.height * 0.45;
-    const particles: Particle[] = Array.from({ length: 240 }, () => ({
-      x: cx, y: cy,
-      vx: (Math.random() - 0.5) * 24, vy: (Math.random() - 1.8) * 14,
-      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-      angle: Math.random() * 360, angVel: (Math.random() - 0.5) * 14,
-      w: 8 + Math.random() * 9, h: 5 + Math.random() * 5, opacity: 1,
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const petals: Petal[] = Array.from({ length: 320 }, () => ({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 200,
+      vx: (Math.random() - 0.5) * 2.5,
+      vy: 0.8 + Math.random() * 1.4,
+      color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
+      angle: Math.random() * 360,
+      angVel: (Math.random() - 0.5) * 4,
+      rx: 5 + Math.random() * 9,
+      ry: 3 + Math.random() * 5,
+      opacity: 0.7 + Math.random() * 0.3,
     }));
     let animId: number;
     function animate() {
       ctx.clearRect(0, 0, canvas!.width, canvas!.height);
       let alive = false;
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.vx *= 0.99;
-        p.angle += p.angVel; p.opacity -= 0.01;
-        if (p.opacity > 0) alive = true;
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle * Math.PI / 180);
-        ctx.globalAlpha = Math.max(0, p.opacity); ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      for (const p of petals) {
+        p.x += p.vx + Math.sin(p.angle * 0.04) * 0.8;
+        p.y += p.vy;
+        p.angle += p.angVel;
+        p.opacity -= 0.0025;
+        if (p.y < canvas!.height + 40 && p.opacity > 0) alive = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle * Math.PI / 180);
+        ctx.globalAlpha = Math.max(0, p.opacity);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.rx, p.ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
       if (alive) animId = requestAnimationFrame(animate);
       else ctx.clearRect(0, 0, canvas!.width, canvas!.height);
@@ -77,7 +164,28 @@ export default function FinaleSection({ isActive }: Props) {
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  const handleYes = () => { setAnswered(true); setTimeout(() => triggerConfetti(), 100); };
+  // 슬라이드쇼
+  useEffect(() => {
+    if (!answered) return;
+    const id = setInterval(() => {
+      setSlideIdx(i => (i + 1) % SLIDE_PHOTOS.length);
+    }, 3000);
+    return () => clearInterval(id);
+  }, [answered]);
+
+  // BGM
+  useEffect(() => {
+    if (!answered) return;
+    playChime();
+    const stop = playBGM();
+    return stop;
+  }, [answered]);
+
+  const handleYes = () => {
+    setAnswered(true);
+    setTimeout(() => triggerPetals(), 200);
+  };
+
   const noScale = Math.max(0.4, 1 - noCount * 0.14);
   const noLabel = noCount === 0 ? '음... 글쎄' : NO_MESSAGES[noCount - 1];
 
@@ -87,34 +195,70 @@ export default function FinaleSection({ isActive }: Props) {
       animate={{ opacity: isActive ? 1 : 0 }}
       transition={{ duration: isActive ? 0.6 : 0 }}
       style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 60px',
-        background: 'transparent',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-        position: 'relative',
+        width: '100%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 60px', background: 'transparent',
+        overflow: 'hidden', boxSizing: 'border-box', position: 'relative',
       }}
     >
+      {/* 꽃잎 canvas */}
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 100, pointerEvents: 'none' }} />
 
+      {/* 슬라이드쇼 오버레이 */}
+      <AnimatePresence>
+        {answered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.88)' }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={slideIdx}
+                src={SLIDE_PHOTOS[slideIdx]}
+                initial={{ opacity: 0, scale: 1.06 }}
+                animate={{ opacity: 0.45, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.9 }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </AnimatePresence>
+
+            {/* 중앙 텍스트 */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, type: 'spring', stiffness: 120 }}
+                style={{ fontFamily: "'Dancing Script',cursive", fontSize: 'clamp(44px,5vw,72px)', color: '#e05c7a', textShadow: '0 2px 24px rgba(224,92,122,0.5)' }}
+              >
+                사랑해, 영원히 ♡
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.7 }}
+                style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 16, color: 'rgba(255,255,255,0.65)', fontWeight: 300, letterSpacing: '1px' }}
+              >
+                함께해줘서 고마워
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 메인 카드 */}
       <motion.div
         animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 36 }}
         transition={{ duration: isActive ? 0.8 : 0, delay: isActive ? 0.15 : 0, type: 'spring', stiffness: 120 }}
         style={{
           background: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 20,
-          padding: '64px 88px',
-          maxWidth: 680,
-          textAlign: 'center',
-          position: 'relative',
-          boxShadow: '0 16px 64px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          border: '0.5px solid rgba(255,255,255,0.1)',
+          borderRadius: 20, padding: '64px 88px', maxWidth: 680,
+          textAlign: 'center', position: 'relative',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.04) inset',
+          zIndex: 10,
         }}
       >
         <motion.div

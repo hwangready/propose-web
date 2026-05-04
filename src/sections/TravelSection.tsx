@@ -4,9 +4,9 @@ import TextCard from '../components/TextCard';
 interface Props { isActive: boolean }
 
 const PHOTOS = [
-  { src: '사진9.jpg',  caption: '여행의 시작',   rotate: -5, width: 185, photoHeight: 160, delay: 0,   offsetY: 0  },
-  { src: '사진10.jpg', caption: '가장 좋았던 날', rotate:  1, width: 215, photoHeight: 190, delay: 0.18, offsetY: 38 },
-  { src: '사진11.jpg', caption: '또 가고 싶어',   rotate:  6, width: 185, photoHeight: 160, delay: 0.36, offsetY: 0  },
+  { src: 'https://picsum.photos/seed/couple9/400/400',  caption: '여행의 시작',   rotate: -5, width: 185, photoHeight: 160, delay: 0,   offsetY: 0  },
+  { src: 'https://picsum.photos/seed/couple10/400/400', caption: '가장 좋았던 날', rotate:  1, width: 215, photoHeight: 190, delay: 0.18, offsetY: 38 },
+  { src: 'https://picsum.photos/seed/couple11/400/400', caption: '또 가고 싶어',   rotate:  6, width: 185, photoHeight: 160, delay: 0.36, offsetY: 0  },
 ];
 
 const LEFT_PCTS = ['8%', '34%', '60%'];

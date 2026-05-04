@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { use3DTilt } from '../hooks/use3DTilt'
+import { useImageViewer } from '../context/ImageContext'
 
 interface Props {
   src: string; caption?: string; rotate?: number
@@ -9,9 +10,17 @@ interface Props {
   draggable?: boolean
 }
 
-export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, photoHeight = 180, showRope = true, ropeLength = 36, draggable = false }: Props) {
+export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, photoHeight = 180, showRope = false, ropeLength = 36, draggable = false }: Props) {
   const { rotateX, rotateY, onMove, onLeave } = use3DTilt(7)
   const constraintRef = useRef<HTMLDivElement>(null)
+  const didDrag = useRef(false)
+  const [imgSrc, setImgSrc] = useState(src)
+  const { openViewer } = useImageViewer()
+
+  const handleClick = () => {
+    if (didDrag.current) return
+    openViewer(imgSrc, (newSrc) => setImgSrc(newSrc))
+  }
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }} ref={constraintRef}>
@@ -26,23 +35,50 @@ export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, p
         dragElastic={0.15}
         dragTransition={{ bounceStiffness: 280, bounceDamping: 20 }}
         whileDrag={{ scale: 1.06, zIndex: 50 }}
+        onDragStart={() => { didDrag.current = true }}
+        onDragEnd={() => { setTimeout(() => { didDrag.current = false }, 80) }}
+        onClick={handleClick}
         onMouseMove={onMove} onMouseLeave={onLeave}
         style={{
           rotate, rotateX, rotateY,
           background: '#fff',
-          padding: '10px 10px 38px',
+          padding: '10px 10px 44px',
           width,
-          boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
           perspective: 600,
-          cursor: draggable ? 'grab' : 'default',
+          cursor: draggable ? 'grab' : 'zoom-in',
           position: 'relative', zIndex: 2,
           userSelect: 'none',
         }}
-        whileHover={{ boxShadow: '0 14px 40px rgba(0,0,0,0.18)', zIndex: 10 }}
+        whileHover={{ boxShadow: '0 18px 50px rgba(0,0,0,0.28)', zIndex: 10 }}
       >
-        {/* 📷 사진 교체: src="원하는파일명.jpg" 로 변경 */}
-        <img src={src} alt="" style={{ width: '100%', height: photoHeight, objectFit: 'cover', display: 'block' }} />
-        {caption && <div style={{ textAlign: 'center', paddingTop: 6, fontFamily: "'Dancing Script',cursive", fontSize: 15, color: '#7a9a8a' }}>{caption}</div>}
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
+          <img src={imgSrc} alt="" style={{ width: '100%', height: photoHeight, objectFit: 'cover', display: 'block' }} />
+          {/* 호버 시 확대 힌트 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.28)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 28, color: '#fff',
+              pointerEvents: 'none',
+            }}
+          >
+            ⊕
+          </motion.div>
+        </div>
+        {caption && (
+          <div style={{
+            textAlign: 'center', paddingTop: 8,
+            fontFamily: "'Dancing Script',cursive",
+            fontSize: 18, color: '#6a8a7a',
+            lineHeight: 1.3,
+          }}>
+            {caption}
+          </div>
+        )}
       </motion.div>
     </div>
   )

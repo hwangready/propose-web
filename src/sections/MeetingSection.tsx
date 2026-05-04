@@ -10,15 +10,10 @@ export default function MeetingSection({ isActive }: Props) {
 
   return (
     <section style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '0 60px',
-      background: 'transparent',
-      overflow: 'hidden',
-      boxSizing: 'border-box',
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '0 60px', background: 'transparent',
+      overflow: 'hidden', boxSizing: 'border-box',
     }}>
       <div style={{ maxWidth: 1200, width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
         <motion.div
@@ -35,7 +30,7 @@ export default function MeetingSection({ isActive }: Props) {
         <motion.div
           animate={{ opacity: isActive ? 1 : 0, x: isActive ? 0 : 50 }}
           transition={{ duration: isActive ? 0.7 : 0, delay: isActive ? 0.2 : 0, type: 'spring', stiffness: 100 }}
-          style={{ position: 'relative', height: 340, display: 'flex', justifyContent: 'center' }}
+          style={{ position: 'relative', height: 380, display: 'flex', justifyContent: 'center' }}
           onMouseDown={() => setDragged(true)}
         >
           <AnimatePresence>
@@ -48,11 +43,11 @@ export default function MeetingSection({ isActive }: Props) {
               </motion.div>
             )}
           </AnimatePresence>
-          <div style={{ position: 'absolute', left: '8%', top: 40 }}>
-            <PolaroidFrame src="https://picsum.photos/seed/couple4/400/400" caption="그 날의 기억" rotate={-6} width={195} photoHeight={170} showRope ropeLength={36} draggable />
+          <div style={{ position: 'absolute', left: '4%', top: 30 }}>
+            <PolaroidFrame src="https://picsum.photos/seed/couple4/500/500" caption="그 날의 기억" rotate={-7} width={230} photoHeight={200} draggable />
           </div>
-          <div style={{ position: 'absolute', left: '38%', top: 60 }}>
-            <PolaroidFrame src="https://picsum.photos/seed/couple5/400/400" caption="함께였던 우리" rotate={5} width={195} photoHeight={170} showRope ropeLength={36} draggable />
+          <div style={{ position: 'absolute', left: '40%', top: 55 }}>
+            <PolaroidFrame src="https://picsum.photos/seed/couple5/500/500" caption="함께였던 우리" rotate={6} width={225} photoHeight={195} draggable />
           </div>
         </motion.div>
       </div>

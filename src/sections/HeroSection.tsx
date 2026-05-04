@@ -4,9 +4,9 @@ import { useMouseParallax } from '../hooks/useMouseParallax';
 interface Props { isActive: boolean }
 
 const PHOTOS = [
-  { src: 'https://picsum.photos/seed/couple1/400/480', caption: '우리의 첫 페이지', rotate: -9, left: '4%',  top: '8%',  width: 200, photoHeight: 175, delay: 0.1 },
-  { src: 'https://picsum.photos/seed/couple2/400/480', caption: '기억하고 싶은 날', rotate:  6, left: '58%', top: '6%',  width: 185, photoHeight: 160, delay: 0.25 },
-  { src: 'https://picsum.photos/seed/couple3/400/480', caption: '함께라서 좋아',   rotate: -4, left: '30%', top: '48%', width: 195, photoHeight: 170, delay: 0.4 },
+  { src: 'https://picsum.photos/seed/couple1/500/600', caption: '우리의 첫 페이지', rotate: -9, left: '3%',  top: '5%',  width: 248, photoHeight: 218, delay: 0.1 },
+  { src: 'https://picsum.photos/seed/couple2/500/600', caption: '기억하고 싶은 날', rotate:  6, left: '57%', top: '4%',  width: 232, photoHeight: 202, delay: 0.25 },
+  { src: 'https://picsum.photos/seed/couple3/500/600', caption: '함께라서 좋아',   rotate: -4, left: '28%', top: '46%', width: 242, photoHeight: 212, delay: 0.4 },
 ];
 
 const MAGNETS = [

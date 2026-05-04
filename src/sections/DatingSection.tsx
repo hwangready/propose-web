@@ -5,8 +5,8 @@ import PolaroidFrame from '../components/PolaroidFrame';
 interface Props { isActive: boolean }
 
 const PHOTOS = [
-  { src: 'https://picsum.photos/seed/couple4/400/400', caption: '그 날의 설렘', rotate: -7, width: 180, photoHeight: 160, delay: 0.1 },
-  { src: 'https://picsum.photos/seed/couple5/400/400', caption: '우리가 된 날', rotate:  4, width: 190, photoHeight: 170, delay: 0.28 },
+  { src: 'https://picsum.photos/seed/couple4/500/500', caption: '그 날의 설렘', rotate: -8, width: 225, photoHeight: 198, delay: 0.1 },
+  { src: 'https://picsum.photos/seed/couple5/500/500', caption: '우리가 된 날', rotate:  5, width: 220, photoHeight: 192, delay: 0.28 },
 ];
 
 export default function DatingSection({ isActive }: Props) {
@@ -29,15 +29,15 @@ export default function DatingSection({ isActive }: Props) {
           </TextCard>
         </motion.div>
 
-        <div style={{ position: 'relative', height: 320, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', height: 360, display: 'flex', justifyContent: 'center' }}>
           {PHOTOS.map((p, i) => (
             <motion.div
               key={i}
               animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 40 }}
               transition={{ duration: isActive ? 0.7 : 0, delay: isActive ? p.delay : 0, type: 'spring', stiffness: 110, damping: 14 }}
-              style={{ position: 'absolute', left: i === 0 ? '5%' : '42%', top: i === 0 ? 20 : 50 }}
+              style={{ position: 'absolute', left: i === 0 ? '3%' : '43%', top: i === 0 ? 15 : 50 }}
             >
-              <PolaroidFrame src={p.src} caption={p.caption} rotate={p.rotate} width={p.width} photoHeight={p.photoHeight} showRope ropeLength={32} draggable />
+              <PolaroidFrame src={p.src} caption={p.caption} rotate={p.rotate} width={p.width} photoHeight={p.photoHeight} draggable />
             </motion.div>
           ))}
         </div>

@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { use3DTilt } from '../hooks/use3DTilt'
+import { useImageViewer } from '../context/ImageContext'
 
 interface HexFrameProps {
   src: string; size: number
@@ -12,18 +14,22 @@ const CLIP = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
 export default function HexFrame({ src, size, patchColor = '#a8d5bf', patchOffset = 7, showPin = true, style }: HexFrameProps) {
   const { rotateX, rotateY, onMove, onLeave } = use3DTilt(8)
   const total = size + patchOffset * 2
+  const [imgSrc, setImgSrc] = useState(src)
+  const { openViewer } = useImageViewer()
+
   return (
     <motion.div
-      style={{ position: 'relative', width: total, height: total, flexShrink: 0, perspective: 600, ...style }}
+      style={{ position: 'relative', width: total, height: total, flexShrink: 0, perspective: 600, cursor: 'zoom-in', ...style }}
       onMouseMove={onMove} onMouseLeave={onLeave}
+      onClick={() => openViewer(imgSrc, (newSrc) => setImgSrc(newSrc))}
+      whileHover={{ scale: 1.05 }}
     >
       <motion.div style={{ width: '100%', height: '100%', rotateX, rotateY, transformStyle: 'preserve-3d' }}>
         {/* 색 패치 */}
         <div style={{ position: 'absolute', inset: 0, clipPath: CLIP, background: patchColor }} />
         {/* 사진 */}
         <div style={{ position: 'absolute', top: patchOffset, left: patchOffset, width: size, height: size, clipPath: CLIP, overflow: 'hidden' }}>
-          {/* 📷 사진 교체: src="원하는파일명.jpg" 로 변경 */}
-          <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <img src={imgSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
         {/* 핀 */}
         {showPin && (

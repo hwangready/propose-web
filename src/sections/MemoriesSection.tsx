@@ -19,7 +19,7 @@ export default function MemoriesSection({ isActive }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '0 60px',
-      background: '#120d1f',
+      background: 'transparent',
       overflow: 'hidden',
       boxSizing: 'border-box',
     }}>

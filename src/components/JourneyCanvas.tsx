@@ -24,23 +24,19 @@ const SECTIONS = [
   { row: 2, col: 1, key: '2-1', Component: FinaleSection },
 ];
 
-const CONNECTIONS = [
-  { x1: 50, y1: 50,  x2: 150, y2: 50  },
-  { x1: 50, y1: 50,  x2: 50,  y2: 150 },
-  { x1: 150, y1: 50,  x2: 150, y2: 150 },
-  { x1: 50, y1: 150, x2: 150, y2: 150 },
-  { x1: 50, y1: 150, x2: 50,  y2: 250 },
-  { x1: 50, y1: 250, x2: 150, y2: 250 },
-];
-
-const SECTION_CENTERS = [
-  { cx: 50,  cy: 50  },
-  { cx: 150, cy: 50  },
-  { cx: 50,  cy: 150 },
-  { cx: 150, cy: 150 },
-  { cx: 50,  cy: 250 },
-  { cx: 150, cy: 250 },
-];
+// viewBox "0 0 200 300" — 각 섹션은 100×100 단위
+// SEQUENCE 순서로 흐르는 구불구불한 경로:
+// Hero(50,50) → Meeting(150,50) → Memories(150,150) → Travel(50,150) → Climax(50,250) → Finale(150,250)
+const WINDING_PATH = `
+  M 50 0
+  C 50,22 50,38 50,50
+  C 80,44 120,44 150,50
+  C 153,82 153,118 150,150
+  C 120,156 80,156 50,150
+  C 47,182 47,218 50,250
+  C 80,244 120,244 150,250
+  C 150,268 150,286 150,300
+`.trim().replace(/\s+/g, ' ');
 
 const PAN_EASE = [0.25, 0.46, 0.45, 0.94] as const;
 const PAN_DURATION = 1.1;
@@ -100,38 +96,43 @@ export default function JourneyCanvas({ pos, go, next }: Props) {
           width: '200vw',
           height: '300vh',
           position: 'relative',
-          background: '#080e0a',
+          // 전체 보드 공통 배경 — 섹션마다 다른 배경 없음
+          background: '#091510',
         }}
       >
-        {/* 섹션 간 점선 연결 SVG */}
+        {/* 구불구불한 점선 경로 — 모든 섹션을 하나로 연결 */}
         <svg
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
           viewBox="0 0 200 300"
           preserveAspectRatio="none"
         >
-          {CONNECTIONS.map((c, i) => (
-            <line
-              key={i}
-              x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
-              stroke="rgba(125,184,160,0.15)"
-              strokeWidth="0.3"
-              strokeDasharray="2 1.6"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-          {SECTION_CENTERS.map((s, i) => (
-            <circle
-              key={i}
-              cx={s.cx} cy={s.cy} r="1.4"
-              fill="none"
-              stroke="rgba(125,184,160,0.22)"
-              strokeWidth="0.3"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
+          {/* 배경 글로우 경로 (두껍고 흐릿한 레이어) */}
+          <path
+            d={WINDING_PATH}
+            fill="none"
+            stroke="rgba(93,202,165,0.06)"
+            strokeWidth="4"
+            vectorEffect="non-scaling-stroke"
+          />
+          {/* 메인 점선 경로 */}
+          <path
+            d={WINDING_PATH}
+            fill="none"
+            stroke="rgba(125,184,160,0.4)"
+            strokeWidth="0.5"
+            strokeDasharray="3 2.2"
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
 
-        {/* 섹션들 */}
+        {/* 섹션들 — 개별 배경 없이 캔버스 위에 플로팅 */}
         {SECTIONS.map(({ row, col, key, Component }) => (
           <div
             key={key}

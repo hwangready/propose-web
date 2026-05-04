@@ -22,7 +22,7 @@ export default function TravelSection({ isActive }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '0 60px',
-      background: '#0d1a0d',
+      background: 'transparent',
       overflow: 'hidden',
       boxSizing: 'border-box',
     }}>

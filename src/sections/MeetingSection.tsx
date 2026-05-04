@@ -16,7 +16,7 @@ export default function MeetingSection({ isActive }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '0 60px',
-      background: '#1a1208',
+      background: 'transparent',
       overflow: 'hidden',
       boxSizing: 'border-box',
     }}>

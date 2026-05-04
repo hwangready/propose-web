@@ -17,7 +17,7 @@ export default function ClimaxSection({ isActive }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '0 60px',
-      background: '#060606',
+      background: 'transparent',
       overflow: 'hidden',
       boxSizing: 'border-box',
     }}>

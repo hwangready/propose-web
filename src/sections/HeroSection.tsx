@@ -32,7 +32,7 @@ export default function HeroSection({ isActive }: Props) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '0 60px',
-      background: '#0d1f14',
+      background: 'transparent',
       overflow: 'hidden',
       boxSizing: 'border-box',
     }}>

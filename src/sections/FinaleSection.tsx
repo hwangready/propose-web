@@ -93,7 +93,7 @@ export default function FinaleSection({ isActive }: Props) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '0 60px',
-        background: '#0f0a14',
+        background: 'transparent',
         overflow: 'hidden',
         boxSizing: 'border-box',
         position: 'relative',

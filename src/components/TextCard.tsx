@@ -1,10 +1,21 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { use3DTilt } from '../hooks/use3DTilt'
+import EditableText from './EditableText'
 
-interface TextCardProps { pill: string; title?: string; children: React.ReactNode; style?: React.CSSProperties }
+interface TextCardProps {
+  pill: string
+  title?: string
+  children: React.ReactNode
+  style?: React.CSSProperties
+  editable?: boolean
+}
 
-export default function TextCard({ pill, title, children, style }: TextCardProps) {
+export default function TextCard({ pill, title, children, style, editable = false }: TextCardProps) {
   const { rotateX, rotateY, onMove, onLeave } = use3DTilt(4)
+  const [pillText] = useState(pill)
+  const [titleText] = useState(title ?? '')
+
   return (
     <motion.div
       onMouseMove={onMove} onMouseLeave={onLeave}
@@ -24,8 +35,18 @@ export default function TextCard({ pill, title, children, style }: TextCardProps
         ...style,
       }}
     >
-      <div style={{ display: 'inline-block', background: '#7db8a0', color: '#fff', fontSize: 12, fontWeight: 500, letterSpacing: '1.5px', padding: '4px 14px', borderRadius: 99, marginBottom: 18 }}>{pill}</div>
-      {title && <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 'clamp(28px,3vw,42px)', color: '#a8d5bf', marginBottom: 14, lineHeight: 1.3 }}>{title}</div>}
+      <div style={{ display: 'inline-block', background: '#7db8a0', color: '#fff', fontSize: 12, fontWeight: 500, letterSpacing: '1.5px', padding: '4px 14px', borderRadius: 99, marginBottom: 18 }}>
+        {editable
+          ? <EditableText style={{ color: '#fff' }}>{pillText}</EditableText>
+          : pillText}
+      </div>
+      {(title || (editable && titleText)) && (
+        <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 'clamp(28px,3vw,42px)', color: '#a8d5bf', marginBottom: 14, lineHeight: 1.3 }}>
+          {editable
+            ? <EditableText>{titleText}</EditableText>
+            : titleText}
+        </div>
+      )}
       <div style={{ fontSize: 15, lineHeight: 1.9, color: 'rgba(255,255,255,0.68)', fontWeight: 300 }}>{children}</div>
     </motion.div>
   )

@@ -7,20 +7,26 @@ interface Props {
   src: string; caption?: string; rotate?: number
   width?: number; photoHeight?: number
   showRope?: boolean; ropeLength?: number
-  draggable?: boolean
+  draggable?: boolean; idleIndex?: number
 }
 
-export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, photoHeight = 180, showRope = false, ropeLength = 36, draggable = false }: Props) {
+export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, photoHeight = 180, showRope = false, ropeLength = 36, draggable = false, idleIndex = 0 }: Props) {
   const { rotateX, rotateY, onMove, onLeave } = use3DTilt(7)
   const constraintRef = useRef<HTMLDivElement>(null)
   const didDrag = useRef(false)
   const [imgSrc, setImgSrc] = useState(src)
+  const [cap, setCap] = useState(caption ?? '')
   const { openViewer } = useImageViewer()
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (didDrag.current) return
     openViewer(imgSrc, (newSrc) => setImgSrc(newSrc))
   }
+
+  const bobY = 3 + idleIndex * 1.5
+  const idleAnimate = !draggable ? { y: [0, -bobY, 0] } : undefined
+  const idleTransition = !draggable ? { duration: 3.5 + idleIndex * 0.6, repeat: Infinity, ease: 'easeInOut' as const, delay: idleIndex * 0.9 } : undefined
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }} ref={constraintRef}>
@@ -39,6 +45,8 @@ export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, p
         onDragEnd={() => { setTimeout(() => { didDrag.current = false }, 80) }}
         onClick={handleClick}
         onMouseMove={onMove} onMouseLeave={onLeave}
+        animate={idleAnimate}
+        transition={idleTransition}
         style={{
           rotate, rotateX, rotateY,
           background: '#fff',
@@ -54,29 +62,28 @@ export default function PolaroidFrame({ src, caption, rotate = 0, width = 200, p
       >
         <div style={{ position: 'relative', overflow: 'hidden' }}>
           <img src={imgSrc} alt="" style={{ width: '100%', height: photoHeight, objectFit: 'cover', display: 'block' }} />
-          {/* 호버 시 확대 힌트 */}
           <motion.div
             initial={{ opacity: 0 }}
             whileHover={{ opacity: 1 }}
-            style={{
-              position: 'absolute', inset: 0,
-              background: 'rgba(0,0,0,0.28)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 28, color: '#fff',
-              pointerEvents: 'none',
-            }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: '#fff', pointerEvents: 'none' }}
           >
             ⊕
           </motion.div>
         </div>
-        {caption && (
-          <div style={{
-            textAlign: 'center', paddingTop: 8,
-            fontFamily: "'Dancing Script',cursive",
-            fontSize: 18, color: '#6a8a7a',
-            lineHeight: 1.3,
-          }}>
-            {caption}
+        {caption !== undefined && (
+          <div
+            style={{ textAlign: 'center', paddingTop: 8, fontFamily: "'Dancing Script',cursive", fontSize: 18, color: '#6a8a7a', lineHeight: 1.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span
+              contentEditable
+              suppressContentEditableWarning
+              data-editable="true"
+              style={{ outline: 'none', cursor: 'text', borderBottom: '1px dashed rgba(93,202,165,0.3)', display: 'inline-block', minWidth: 20 }}
+              onBlur={(e) => setCap(e.currentTarget.innerText)}
+            >
+              {cap}
+            </span>
           </div>
         )}
       </motion.div>

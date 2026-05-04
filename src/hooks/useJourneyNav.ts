@@ -32,8 +32,25 @@ export const SEQUENCE: [number, number][] = [
   [3, 0], // Finale
 ];
 
+// 각 섹션 내부에서 클릭으로 순차적으로 보여줄 최대 단계 수
+export const SECTION_MAX_STEPS: Record<string, number> = {
+  '0,0': 3, // Hero: photo1(0) → photo2(1) → photo3(2) → center sticker(3)
+  '0,1': 2, // Meeting: textcard(0) → polaroid1(1) → polaroid2(2)
+  '0,2': 2, // Dating: textcard(0) → polaroid1(1) → polaroid2(2)
+  '1,2': 2, // FirstTrip: photo1(0) → photo2(1) → photo3+textcard(2)
+  '1,1': 2, // Memories: hex1(0) → hex2(1) → hex3+textcard(2)
+  '1,0': 2, // Travel: photo1(0) → photo2(1) → photo3+textcard(2)
+  '2,0': 1, // Daily: photos(0) → textcard(1)
+  '2,1': 2, // Together: hex1(0) → hex2(1) → hex3+textcard(2)
+  '2,2': 2, // Climax: line1(0) → line2(1) → line3(2)
+  '3,2': 3, // Future: subtitle(0) → line1(1) → line2(2) → line3(3)
+  '3,1': 1, // Promise: heart+maintext(0) → bodytext(1)
+  '3,0': 1, // Finale: card(0) → buttons(1)
+};
+
 export function useJourneyNav() {
   const [pos, setPos] = useState<[number, number]>([0, 0]);
+  const [sectionStep, setSectionStep] = useState(0);
 
   const canGo = useCallback(
     (dir: Dir) => !!NAV_MAP[`${pos[0]},${pos[1]}`]?.[dir],
@@ -42,45 +59,46 @@ export function useJourneyNav() {
 
   const go = useCallback(
     (dir: Dir) => {
-      const next = NAV_MAP[`${pos[0]},${pos[1]}`]?.[dir];
-      if (next) setPos(next);
+      const nextPos = NAV_MAP[`${pos[0]},${pos[1]}`]?.[dir];
+      if (nextPos) { setPos(nextPos); setSectionStep(0); }
     },
     [pos]
   );
 
   const goTo = useCallback((row: number, col: number) => {
     setPos([row, col]);
+    setSectionStep(0);
   }, []);
 
   const seqIdx = SEQUENCE.findIndex(([r, c]) => r === pos[0] && c === pos[1]);
+
   const next = useCallback(() => {
-    const nextPos = SEQUENCE[seqIdx + 1];
-    if (nextPos) setPos(nextPos);
-  }, [seqIdx]);
+    const key = `${pos[0]},${pos[1]}`;
+    const maxSteps = SECTION_MAX_STEPS[key] ?? 0;
+    if (sectionStep < maxSteps) {
+      setSectionStep(s => s + 1);
+    } else {
+      setSectionStep(0);
+      const nextPos = SEQUENCE[seqIdx + 1];
+      if (nextPos) setPos(nextPos);
+    }
+  }, [seqIdx, sectionStep, pos]);
 
   const isLast = seqIdx === SEQUENCE.length - 1;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const map: Record<string, Dir> = {
-        ArrowRight: 'right',
-        ArrowLeft: 'left',
-        ArrowDown: 'down',
-        ArrowUp: 'up',
+        ArrowRight: 'right', ArrowLeft: 'left',
+        ArrowDown: 'down', ArrowUp: 'up',
       };
       const dir = map[e.key];
-      if (dir) {
-        e.preventDefault();
-        go(dir);
-      }
-      if (e.key === ' ') {
-        e.preventDefault();
-        next();
-      }
+      if (dir) { e.preventDefault(); go(dir); }
+      if (e.key === ' ') { e.preventDefault(); next(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [go, next]);
 
-  return { pos, go, goTo, canGo, next, isLast, seqIdx };
+  return { pos, go, goTo, canGo, next, isLast, seqIdx, sectionStep };
 }

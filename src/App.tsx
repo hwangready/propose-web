@@ -6,10 +6,9 @@ import JourneyCanvas from './components/JourneyCanvas';
 import NavigationMap from './components/NavigationMap';
 import DirectionArrows from './components/DirectionArrows';
 import ImageViewer from './components/ImageViewer';
+import ControlsFAB from './components/ControlsFAB';
 import { ImageProvider, useImageViewer } from './context/ImageContext';
 import { useJourneyNav } from './hooks/useJourneyNav';
-
-const SPEED_OPTIONS = [3, 5, 8, 10];
 
 const SECTION_NAMES = [
   '인트로', '처음 만난 날', '우리가 된 날',
@@ -21,7 +20,7 @@ const SECTION_NAMES = [
 const GRAIN_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
 
 function AppInner() {
-  const { pos, go, goTo, canGo, next, isLast, seqIdx } = useJourneyNav();
+  const { pos, go, goTo, canGo, next, isLast, seqIdx, sectionStep } = useJourneyNav();
   const [presentMode, setPresentMode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(false);
   const [autoSec, setAutoSec] = useState(3);
@@ -32,7 +31,6 @@ function AppInner() {
   const startTimeRef = useRef<number>(0);
   const { viewer, closeViewer } = useImageViewer();
 
-  // 전체화면 토글
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -49,7 +47,6 @@ function AppInner() {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  // 자동 재생 타이머
   useEffect(() => {
     if (!autoPlay || isLast) {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -79,31 +76,10 @@ function AppInner() {
     };
   }, [autoPlay, autoSec, pos, isLast, next]);
 
-  const btnStyle: React.CSSProperties = {
-    position: 'fixed',
-    right: 24,
-    zIndex: 200,
-    background: 'rgba(8,22,14,0.88)',
-    backdropFilter: 'blur(14px)',
-    WebkitBackdropFilter: 'blur(14px)',
-    border: '1px solid rgba(100,170,130,0.4)',
-    color: '#9ecfba',
-    padding: '10px 18px',
-    borderRadius: 99,
-    cursor: 'pointer',
-    fontFamily: "'Courier New',monospace",
-    fontSize: 10,
-    letterSpacing: '2px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 7,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-  };
-
   return (
     <>
       <CustomCursor />
-      <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} />
+      <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
       <NavigationMap pos={pos} goTo={goTo} />
       <DirectionArrows canGo={canGo} go={go} />
 
@@ -144,103 +120,23 @@ function AppInner() {
         {String(seqIdx + 1).padStart(2, '0')} / 12
       </div>
 
-      {/* 전체화면 버튼 */}
-      <motion.button
-        onClick={toggleFullscreen}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0, duration: 0.5 }}
-        style={{ ...btnStyle, bottom: 200 }}
-      >
-        <span>{isFullscreen ? '⛶' : '⛶'}</span>
-        <span>{isFullscreen ? '창모드' : '전체화면'}</span>
-      </motion.button>
-
-      {/* 자동 재생 버튼 */}
-      <motion.button
-        onClick={() => setAutoPlay(a => !a)}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.4, duration: 0.5 }}
-        style={{ ...btnStyle, bottom: 140 }}
-      >
-        <span>{autoPlay ? '⏸' : '▷'}</span>
-        <span>자동 {autoSec}s</span>
-      </motion.button>
-
-      {/* 속도 선택 칩 */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6 }}
-        style={{
-          position: 'fixed', right: 24, bottom: 108, zIndex: 200,
-          display: 'flex', gap: 5,
-        }}
-      >
-        {SPEED_OPTIONS.map(s => (
-          <button
-            key={s}
-            onClick={() => { setAutoSec(s); if (!autoPlay) setAutoPlay(true); }}
-            style={{
-              background: autoSec === s ? 'rgba(93,202,165,0.25)' : 'rgba(8,22,14,0.7)',
-              border: `1px solid ${autoSec === s ? 'rgba(93,202,165,0.6)' : 'rgba(100,170,130,0.2)'}`,
-              color: autoSec === s ? '#5dcaa5' : 'rgba(125,184,160,0.5)',
-              padding: '5px 10px',
-              borderRadius: 99,
-              cursor: 'pointer',
-              fontFamily: "'Courier New',monospace",
-              fontSize: 9,
-              letterSpacing: '1px',
-            }}
-          >
-            {s}s
-          </button>
-        ))}
-      </motion.div>
-
-      {/* 연출 모드 버튼 */}
-      <motion.button
-        onClick={() => setPresentMode(true)}
-        whileHover={{ scale: 1.06, boxShadow: '0 8px 32px rgba(93,168,128,0.3)' }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.5 }}
-        style={{ ...btnStyle, bottom: 80 }}
-      >
-        <span>▶</span>
-        <span>연출 모드</span>
-      </motion.button>
-
-      {/* 자동 재생 진행 바 */}
-      <AnimatePresence>
-        {autoPlay && !isLast && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 2, zIndex: 300, background: 'rgba(125,184,160,0.15)' }}
-          >
-            <div style={{
-              height: '100%',
-              background: 'linear-gradient(to right, #5dcaa5, #7db8a0)',
-              width: `${progress * 100}%`,
-              transition: 'none',
-            }} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 통합 FAB 컨트롤 */}
+      <ControlsFAB
+        autoPlay={autoPlay}
+        setAutoPlay={setAutoPlay}
+        autoSec={autoSec}
+        setAutoSec={setAutoSec}
+        isFullscreen={isFullscreen}
+        toggleFullscreen={toggleFullscreen}
+        onPresentMode={() => setPresentMode(true)}
+        progress={progress}
+        isLast={isLast}
+      />
 
       <AnimatePresence>
         {presentMode && <PresentationMode onClose={() => setPresentMode(false)} />}
       </AnimatePresence>
 
-      {/* 이미지 뷰어 */}
       <AnimatePresence>
         {viewer && (
           <ImageViewer

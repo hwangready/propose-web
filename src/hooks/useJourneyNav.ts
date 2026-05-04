@@ -11,6 +11,15 @@ const NAV_MAP: Record<string, Partial<Record<Dir, [number, number]>>> = {
   '2,1': { left: [2, 0], up: [1, 0] },
 };
 
+export const SEQUENCE: [number, number][] = [
+  [0, 0], // Hero
+  [0, 1], // Meeting
+  [1, 1], // Memories
+  [1, 0], // Travel
+  [2, 0], // Climax
+  [2, 1], // Finale
+];
+
 export function useJourneyNav() {
   const [pos, setPos] = useState<[number, number]>([0, 0]);
 
@@ -31,6 +40,14 @@ export function useJourneyNav() {
     setPos([row, col]);
   }, []);
 
+  const seqIdx = SEQUENCE.findIndex(([r, c]) => r === pos[0] && c === pos[1]);
+  const next = useCallback(() => {
+    const nextPos = SEQUENCE[seqIdx + 1];
+    if (nextPos) setPos(nextPos);
+  }, [seqIdx]);
+
+  const isLast = seqIdx === SEQUENCE.length - 1;
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const map: Record<string, Dir> = {
@@ -44,10 +61,14 @@ export function useJourneyNav() {
         e.preventDefault();
         go(dir);
       }
+      if (e.key === ' ') {
+        e.preventDefault();
+        next();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go]);
+  }, [go, next]);
 
-  return { pos, go, goTo, canGo };
+  return { pos, go, goTo, canGo, next, isLast, seqIdx };
 }

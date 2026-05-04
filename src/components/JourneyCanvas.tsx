@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion, useSpring, type PanInfo } from 'framer-motion';
+import { motion, animate, useMotionValue, type PanInfo } from 'framer-motion';
 import HeroSection from '../sections/HeroSection';
 import MeetingSection from '../sections/MeetingSection';
 import TravelSection from '../sections/TravelSection';
@@ -12,6 +12,7 @@ interface Props {
   pos: [number, number];
   go: (dir: Dir) => void;
   canGo: (dir: Dir) => boolean;
+  next: () => void;
 }
 
 const SECTIONS = [
@@ -23,13 +24,34 @@ const SECTIONS = [
   { row: 2, col: 1, key: '2-1', Component: FinaleSection },
 ];
 
-export default function JourneyCanvas({ pos, go }: Props) {
-  const x = useSpring(0, { stiffness: 150, damping: 25 });
-  const y = useSpring(0, { stiffness: 150, damping: 25 });
+const CONNECTIONS = [
+  { x1: 50, y1: 50,  x2: 150, y2: 50  },
+  { x1: 50, y1: 50,  x2: 50,  y2: 150 },
+  { x1: 150, y1: 50,  x2: 150, y2: 150 },
+  { x1: 50, y1: 150, x2: 150, y2: 150 },
+  { x1: 50, y1: 150, x2: 50,  y2: 250 },
+  { x1: 50, y1: 250, x2: 150, y2: 250 },
+];
+
+const SECTION_CENTERS = [
+  { cx: 50,  cy: 50  },
+  { cx: 150, cy: 50  },
+  { cx: 50,  cy: 150 },
+  { cx: 150, cy: 150 },
+  { cx: 50,  cy: 250 },
+  { cx: 150, cy: 250 },
+];
+
+const PAN_EASE = [0.25, 0.46, 0.45, 0.94] as const;
+const PAN_DURATION = 1.1;
+
+export default function JourneyCanvas({ pos, go, next }: Props) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   useEffect(() => {
-    x.set(-pos[1] * window.innerWidth);
-    y.set(-pos[0] * window.innerHeight);
+    animate(x, -pos[1] * window.innerWidth,  { duration: PAN_DURATION, ease: PAN_EASE });
+    animate(y, -pos[0] * window.innerHeight, { duration: PAN_DURATION, ease: PAN_EASE });
   }, [pos, x, y]);
 
   useEffect(() => {
@@ -47,12 +69,10 @@ export default function JourneyCanvas({ pos, go }: Props) {
     const absY = Math.abs(offset.y);
     const absVX = Math.abs(velocity.x);
     const absVY = Math.abs(velocity.y);
+    const OFFSET_THRESH = 60;
+    const VEL_THRESH = 300;
 
-    const isHoriz = absX > absY || absVX > absVY;
-    const OFFSET_THRESH = 80;
-    const VEL_THRESH = 400;
-
-    if (isHoriz) {
+    if (absX > absY || absVX > absVY) {
       if (offset.x < 0 && (absVX > VEL_THRESH || absX > OFFSET_THRESH)) go('right');
       else if (offset.x > 0 && (absVX > VEL_THRESH || absX > OFFSET_THRESH)) go('left');
     } else {
@@ -61,10 +81,17 @@ export default function JourneyCanvas({ pos, go }: Props) {
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (['BUTTON', 'A', 'INPUT', 'CANVAS', 'SELECT', 'TEXTAREA'].includes(tag)) return;
+    next();
+  };
+
   return (
     <motion.div
       onPanEnd={handlePanEnd}
-      style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}
+      onClick={handleClick}
+      style={{ position: 'fixed', inset: 0, overflow: 'hidden', cursor: 'default' }}
     >
       <motion.div
         style={{
@@ -73,8 +100,38 @@ export default function JourneyCanvas({ pos, go }: Props) {
           width: '200vw',
           height: '300vh',
           position: 'relative',
+          background: '#080e0a',
         }}
       >
+        {/* 섹션 간 점선 연결 SVG */}
+        <svg
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
+          viewBox="0 0 200 300"
+          preserveAspectRatio="none"
+        >
+          {CONNECTIONS.map((c, i) => (
+            <line
+              key={i}
+              x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
+              stroke="rgba(125,184,160,0.15)"
+              strokeWidth="0.3"
+              strokeDasharray="2 1.6"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {SECTION_CENTERS.map((s, i) => (
+            <circle
+              key={i}
+              cx={s.cx} cy={s.cy} r="1.4"
+              fill="none"
+              stroke="rgba(125,184,160,0.22)"
+              strokeWidth="0.3"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </svg>
+
+        {/* 섹션들 */}
         {SECTIONS.map(({ row, col, key, Component }) => (
           <div
             key={key}
@@ -84,7 +141,7 @@ export default function JourneyCanvas({ pos, go }: Props) {
               top: `${row * 100}vh`,
               width: '100vw',
               height: '100vh',
-              overflow: 'hidden',
+              zIndex: 1,
             }}
           >
             <Component isActive={pos[0] === row && pos[1] === col} />

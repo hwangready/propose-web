@@ -17,7 +17,7 @@ const GRID_PHOTOS = [
 export default function DailySection({ isActive, step }: Props) {
   const { openViewer } = useImageViewer();
   const [srcs, setSrcs] = useState(GRID_PHOTOS.map(p => p.src));
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 60px', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -26,14 +26,14 @@ export default function DailySection({ isActive, step }: Props) {
         {/* 2×2 사진 격자 */}
         <motion.div
           animate={{ opacity: show(0) ? 1 : 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.25 }}
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}
         >
           {GRID_PHOTOS.map((p, i) => (
             <motion.div
               key={i}
               animate={{ opacity: show(0) ? 1 : 0, scale: show(0) ? 1 : 0.88 }}
-              transition={{ duration: 0.6, delay: show(0) ? p.delay : 0, type: 'spring', stiffness: 180, damping: 16 }}
+              transition={{ duration: 0.3, delay: show(0) ? p.delay : 0, type: 'spring', stiffness: 180, damping: 16 }}
               whileHover={{ scale: 1.03, zIndex: 2 }}
               style={{ borderRadius: 10, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.35)', cursor: 'zoom-in' }}
               onClick={(e) => { e.stopPropagation(); openViewer(srcs[i], newSrc => setSrcs(prev => prev.map((s, j) => j === i ? newSrc : s))); }}
@@ -51,7 +51,7 @@ export default function DailySection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(1) ? 1 : 0, x: show(1) ? 0 : 50 }}
-          transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
+          transition={{ duration: 0.35, type: 'spring', stiffness: 100 }}
         >
           <TextCard pill="우리의 일상" title="평범한 매일" editable>
             <p><EditableText>특별한 게 없어도</EditableText></p>

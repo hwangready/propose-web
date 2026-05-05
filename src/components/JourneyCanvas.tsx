@@ -1,5 +1,6 @@
 import { useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, animate, useMotionValue, type PanInfo } from 'framer-motion';
+import CanvasDecorations from './CanvasDecorations';
 import HeroSection from '../sections/HeroSection';
 import MeetingSection from '../sections/MeetingSection';
 import DatingSection from '../sections/DatingSection';
@@ -81,7 +82,7 @@ const svgToPx = (svgX: number, svgY: number) => ({
 });
 
 const PAN_EASE = [0.25, 0.46, 0.45, 0.94] as const;
-const PAN_DURATION = 1.1;
+const PAN_DURATION = 0.65;
 
 export default function JourneyCanvas({ pos, go, next, sectionStep }: Props) {
   const x = useMotionValue(0);
@@ -204,27 +205,23 @@ export default function JourneyCanvas({ pos, go, next, sectionStep }: Props) {
 
           <path d={WINDING_PATH} fill="none" stroke="rgba(93,202,165,0.07)" strokeWidth="14" vectorEffect="non-scaling-stroke" />
 
-          {PATH_SEGMENTS.map((d, i) => {
-            const visited = safeIdx > i;
-            return (
-              <motion.path
-                key={i}
-                d={d}
-                fill="none"
-                vectorEffect="non-scaling-stroke"
-                strokeDasharray={visited ? 'none' : '4 3'}
-                animate={{
-                  stroke: visited ? 'rgba(93,202,165,0.88)' : 'rgba(125,184,160,0.28)',
-                  strokeWidth: visited ? 2.5 : 1.6,
-                  filter: visited ? 'drop-shadow(0 0 3px rgba(93,202,165,0.6))' : 'none',
-                }}
-                transition={{ duration: 0.7, ease: 'easeOut' }}
-              />
-            );
-          })}
+          {/* Journey path — single stroke that draws progressively to current section */}
+          <motion.path
+            d={WINDING_PATH}
+            fill="none"
+            stroke="rgba(93,202,165,0.9)"
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+            style={{ filter: 'drop-shadow(0 0 4px rgba(93,202,165,0.65))' }}
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: SEQ_FRACTIONS[safeIdx] }}
+            transition={{ duration: PAN_DURATION, ease: PAN_EASE }}
+          />
 
-          <path d={WINDING_PATH} fill="none" stroke="rgba(125,184,160,0.15)" strokeWidth="1.6" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+          <path d={WINDING_PATH} fill="none" stroke="rgba(125,184,160,0.04)" strokeWidth="1.6" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
         </svg>
+
+        <CanvasDecorations />
 
         {/* 이동 도트 */}
         <motion.div

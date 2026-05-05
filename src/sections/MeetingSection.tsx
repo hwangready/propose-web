@@ -9,7 +9,7 @@ interface Props { isActive: boolean; step: number }
 
 export default function MeetingSection({ isActive, step }: Props) {
   const [dragged, setDragged] = useState(false);
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 60px', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -17,7 +17,7 @@ export default function MeetingSection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(0) ? 1 : 0, x: show(0) ? 0 : -50 }}
-          transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
+          transition={{ duration: 0.35, type: 'spring', stiffness: 100 }}
         >
           <TextCard pill="우리의 시작" title="처음 만난 날" editable>
             <p><EditableText>처음 네 얼굴을 봤을 때,</EditableText></p>
@@ -28,8 +28,8 @@ export default function MeetingSection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(1) ? 1 : 0, x: show(1) ? 0 : 50 }}
-          transition={{ duration: 0.7, type: 'spring', stiffness: 100 }}
-          style={{ position: 'relative', height: 380, display: 'flex', justifyContent: 'center' }}
+          transition={{ duration: 0.35, type: 'spring', stiffness: 100 }}
+          style={{ position: 'relative', height: 460, display: 'flex', justifyContent: 'center' }}
           onMouseDown={() => setDragged(true)}
         >
           <AnimatePresence>
@@ -44,17 +44,17 @@ export default function MeetingSection({ isActive, step }: Props) {
           </AnimatePresence>
           <motion.div
             animate={{ opacity: show(1) ? 1 : 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ position: 'absolute', left: '4%', top: 30 }}
+            transition={{ duration: 0.3 }}
+            style={{ position: 'absolute', left: '4%', top: 20 }}
           >
-            <PolaroidFrame src="https://picsum.photos/seed/couple4/500/500" caption="그 날의 기억" rotate={-7} width={230} photoHeight={200} draggable />
+            <PolaroidFrame src="https://picsum.photos/seed/couple4/500/500" caption="그 날의 기억" rotate={-7} width={288} photoHeight={254} draggable />
           </motion.div>
           <motion.div
             animate={{ opacity: show(2) ? 1 : 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            style={{ position: 'absolute', left: '40%', top: 55 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            style={{ position: 'absolute', left: '38%', top: 65 }}
           >
-            <PolaroidFrame src="https://picsum.photos/seed/couple5/500/500" caption="함께였던 우리" rotate={6} width={225} photoHeight={195} draggable />
+            <PolaroidFrame src="https://picsum.photos/seed/couple5/500/500" caption="함께였던 우리" rotate={6} width={278} photoHeight={246} draggable />
           </motion.div>
         </motion.div>
       </div>

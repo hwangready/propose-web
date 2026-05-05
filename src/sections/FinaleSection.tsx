@@ -9,11 +9,27 @@ interface Props { isActive: boolean; step: number }
 const NO_MESSAGES = ['정말...? 💕', '한 번 더 생각해봐', '나 슬퍼지잖아 😢', '마지막 기회야... 💍', '제발... 🥺'];
 const PETAL_COLORS = ['#ffb3c6', '#e05c7a', '#f9d6df', '#ffe4e4', '#fff', '#ffcad4'];
 
-// slide 8 (index 7) uses a different seed to avoid a small-looking image
-const SLIDE_PHOTOS_INIT = [
-  ...Array.from({ length: 7 }, (_, i) => `https://picsum.photos/seed/couple${i + 1}/900/600`),
+const COLLAGE_PHOTOS_INIT = [
+  'https://picsum.photos/seed/couple1/900/600',
+  'https://picsum.photos/seed/couple2/900/600',
+  'https://picsum.photos/seed/couple3/900/600',
+  'https://picsum.photos/seed/couple4/900/600',
+  'https://picsum.photos/seed/couple5/900/600',
+  'https://picsum.photos/seed/couple6/900/600',
+  'https://picsum.photos/seed/couple7/900/600',
   'https://picsum.photos/seed/couple28/900/600',
-  ...Array.from({ length: 4 }, (_, i) => `https://picsum.photos/seed/couple${i + 9}/900/600`),
+];
+
+// 8 polaroid positions: offset from screen center (% of screen), each flies in from `from`
+const COLLAGE = [
+  { ox: '-44%', oy: '-32%', rotate: -13, w: 230, from: { x: -700, y: -500 }, delay: 0.0  },
+  { ox:  '10%', oy: '-38%', rotate:   9, w: 205, from: { x:  400, y: -600 }, delay: 0.11 },
+  { ox:  '42%', oy: '-20%', rotate:  -5, w: 215, from: { x:  800, y: -250 }, delay: 0.22 },
+  { ox: '-52%', oy:  '10%', rotate:  15, w: 198, from: { x: -800, y:  150 }, delay: 0.34 },
+  { ox:  '-6%', oy:   '6%', rotate:  -8, w: 252, from: { x: -250, y:  700 }, delay: 0.08 },
+  { ox:  '30%', oy:  '12%', rotate:   7, w: 224, from: { x:  550, y:  500 }, delay: 0.19 },
+  { ox: '-30%', oy:  '40%', rotate: -17, w: 200, from: { x: -600, y:  700 }, delay: 0.29 },
+  { ox:  '40%', oy:  '36%', rotate:  11, w: 212, from: { x:  700, y:  700 }, delay: 0.40 },
 ];
 
 interface Petal { x:number; y:number; vx:number; vy:number; color:string; angle:number; angVel:number; rx:number; ry:number; opacity:number }
@@ -62,13 +78,12 @@ function playBGM(): () => void {
 export default function FinaleSection({ isActive, step }: Props) {
   const [answered, setAnswered] = useState(false);
   const [noCount, setNoCount] = useState(0);
-  const [slideIdx, setSlideIdx] = useState(0);
-  const [slidePhotos, setSlidePhotos] = useState(SLIDE_PHOTOS_INIT);
+  const [collagePhotos, setCollagePhotos] = useState(COLLAGE_PHOTOS_INIT);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const { openViewer } = useImageViewer();
 
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   const ringRawX = useMotionValue(0);
   const ringRawY = useMotionValue(0);
@@ -132,12 +147,6 @@ export default function FinaleSection({ isActive, step }: Props) {
 
   useEffect(() => {
     if (!answered) return;
-    const id = setInterval(() => setSlideIdx(i => (i + 1) % slidePhotos.length), 3000);
-    return () => clearInterval(id);
-  }, [answered, slidePhotos.length]);
-
-  useEffect(() => {
-    if (!answered) return;
     playChime();
     const stop = playBGM();
     return stop;
@@ -156,38 +165,77 @@ export default function FinaleSection({ isActive, step }: Props) {
     >
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 100, pointerEvents: 'none' }} />
 
-      {/* 슬라이드쇼 오버레이 */}
+      {/* 청혼 승낙 아웃트로 — 밝은 배경 + 폴라로이드 날아오기 */}
       <AnimatePresence>
         {answered && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.88)' }}>
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={slideIdx}
-                src={slidePhotos[slideIdx]}
-                initial={{ opacity: 0, scale: 1.06 }}
-                animate={{ opacity: 0.45, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.9 }}
-                onClick={(e) => { e.stopPropagation(); openViewer(slidePhotos[slideIdx], newSrc => setSlidePhotos(prev => prev.map((s, i) => i === slideIdx ? newSrc : s))); }}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
-              />
-            </AnimatePresence>
-            <div style={{ position: 'absolute', inset: 0, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#fffff4' }}
+          >
+            {/* 날아오는 폴라로이드 사진들 */}
+            {COLLAGE.map((c, i) => (
               <motion.div
-                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, type: 'spring', stiffness: 120 }}
-                style={{ fontFamily: "'Dancing Script',cursive", fontSize: 'clamp(44px,5vw,72px)', color: '#e05c7a', textShadow: '0 2px 24px rgba(224,92,122,0.5)' }}
+                key={i}
+                initial={{ x: c.from.x, y: c.from.y, opacity: 0, rotate: c.rotate * 2 }}
+                animate={{ x: 0, y: 0, opacity: 1, rotate: c.rotate }}
+                transition={{ type: 'spring', stiffness: 110, damping: 18, delay: c.delay }}
+                style={{
+                  position: 'absolute',
+                  left: '50%', top: '50%',
+                  translateX: `calc(-50% + ${c.ox})`,
+                  translateY: `calc(-50% + ${c.oy})`,
+                  cursor: 'zoom-in',
+                  zIndex: 2 + i,
+                }}
+                onClick={e => {
+                  e.stopPropagation();
+                  openViewer(collagePhotos[i], newSrc => setCollagePhotos(prev => prev.map((s, j) => j === i ? newSrc : s)));
+                }}
+              >
+                <div style={{
+                  background: '#fff', padding: '8px 8px 34px',
+                  width: c.w, boxShadow: '0 10px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)',
+                }}>
+                  <div style={{ position: 'relative', overflow: 'hidden' }}>
+                    <img
+                      src={collagePhotos[i]}
+                      alt=""
+                      style={{ width: '100%', height: c.w * 0.78, objectFit: 'cover', display: 'block' }}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#fff', pointerEvents: 'none' }}
+                    >⊕</motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+            {/* 텍스트 오버레이 */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none' }}>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.85, duration: 0.55, type: 'spring', stiffness: 120 }}
+                style={{ fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(52px,6vw,88px)', color: '#c94b6d', textShadow: '0 2px 16px rgba(201,75,109,0.2)', lineHeight: 1.15 }}
                 onClick={e => e.stopPropagation()}
               >
-                <EditableText>사랑해, 영원히 ♡</EditableText>
+                <span style={{ pointerEvents: 'auto' }}>
+                  <EditableText>사랑해, 영원히 ♡</EditableText>
+                </span>
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.7 }}
-                style={{ fontFamily: "'Noto Sans KR',sans-serif", fontSize: 16, color: 'rgba(255,255,255,0.65)', fontWeight: 300, letterSpacing: '1px' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.3, duration: 0.5 }}
+                style={{ fontFamily: "'Noto Sans KR', sans-serif", fontSize: 18, color: '#9a7a80', fontWeight: 300, letterSpacing: '1.5px' }}
                 onClick={e => e.stopPropagation()}
               >
-                <EditableText>함께해줘서 고마워</EditableText>
+                <span style={{ pointerEvents: 'auto' }}>
+                  <EditableText>함께해줘서 고마워</EditableText>
+                </span>
               </motion.div>
             </div>
           </motion.div>
@@ -197,7 +245,7 @@ export default function FinaleSection({ isActive, step }: Props) {
       {/* 메인 카드 */}
       <motion.div
         animate={{ opacity: show(0) ? 1 : 0, y: show(0) ? 0 : 36 }}
-        transition={{ duration: 0.8, type: 'spring', stiffness: 120 }}
+        transition={{ duration: 0.4, type: 'spring', stiffness: 120 }}
         style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '64px 88px', maxWidth: 680, textAlign: 'center', position: 'relative', boxShadow: '0 4px 32px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.04) inset', zIndex: 10 }}
       >
         <motion.div

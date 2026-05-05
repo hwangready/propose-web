@@ -16,7 +16,7 @@ const PHOTOS = [
 export default function TravelSection({ isActive, step }: Props) {
   const { openViewer } = useImageViewer();
   const [srcs, setSrcs] = useState(PHOTOS.map(p => p.src));
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 60px', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -27,7 +27,7 @@ export default function TravelSection({ isActive, step }: Props) {
             <motion.div
               key={i}
               animate={{ opacity: show(i) ? 1 : 0, y: show(i) ? 0 : 32, scale: show(i) ? 1 : 0.88 }}
-              transition={{ duration: 0.7, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 130, damping: 16 }}
+              transition={{ duration: 0.35, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 130, damping: 16 }}
               whileHover={{ scale: 1.05, zIndex: 10, rotate: p.rotate * 0.3 }}
               style={{ position: 'absolute', left: p.left, top: p.top, rotate: p.rotate, zIndex: i + 1 }}
             >
@@ -56,7 +56,7 @@ export default function TravelSection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(2) ? 1 : 0, y: show(2) ? 0 : 20 }}
-          transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
+          transition={{ duration: 0.3, type: 'spring', stiffness: 100 }}
           style={{ maxWidth: 560, margin: '0 auto' }}
         >
           <TextCard pill="모든 여행에서" editable>

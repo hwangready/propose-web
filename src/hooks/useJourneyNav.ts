@@ -34,21 +34,21 @@ export const SEQUENCE: [number, number][] = [
 
 // 각 섹션 내부에서 클릭으로 순차적으로 보여줄 최대 단계 수
 export const SECTION_MAX_STEPS: Record<string, number> = {
-  '0,0': 3, // Hero: photo1(0) → photo2(1) → photo3(2) → center sticker(3)
-  '0,1': 2, // Meeting: textcard(0) → polaroid1(1) → polaroid2(2)
-  '0,2': 2, // Dating: textcard(0) → polaroid1(1) → polaroid2(2)
-  '1,2': 2, // FirstTrip: photo1(0) → photo2(1) → photo3+textcard(2)
-  '1,1': 2, // Memories: hex1(0) → hex2(1) → hex3+textcard(2)
-  '1,0': 2, // Travel: photo1(0) → photo2(1) → photo3+textcard(2)
-  '2,0': 1, // Daily: photos(0) → textcard(1)
-  '2,1': 2, // Together: hex1(0) → hex2(1) → hex3+textcard(2)
-  '2,2': 2, // Climax: line1(0) → line2(1) → line3(2)
-  '3,2': 3, // Future: subtitle(0) → line1(1) → line2(2) → line3(3)
-  '3,1': 1, // Promise: heart+maintext(0) → bodytext(1)
-  '3,0': 1, // Finale: card(0) → buttons(1)
+  '0,0': 4, // Hero: photo1(1) → photo2(2) → photo3(3) → center sticker(4)
+  '0,1': 3, // Meeting: textcard(1) → polaroid1(2) → polaroid2(3)
+  '0,2': 3, // Dating: textcard(1) → polaroid1(2) → polaroid2(3)
+  '1,2': 3, // FirstTrip: photo1(1) → photo2(2) → photo3+textcard(3)
+  '1,1': 3, // Memories: polaroid1(1) → polaroid2(2) → polaroid3+textcard(3)
+  '1,0': 3, // Travel: photo1(1) → photo2(2) → photo3+textcard(3)
+  '2,0': 2, // Daily: photos(1) → textcard(2)
+  '2,1': 3, // Together: hex1(1) → hex2(2) → hex3+textcard(3)
+  '2,2': 0, // Climax: TextFlippingBoard 자동 루프, 클릭 시 바로 다음 섹션
+  '3,2': 4, // Future: subtitle(1) → line1(2) → line2(3) → line3(4)
+  '3,1': 2, // Promise: heart+maintext(1) → bodytext(2)
+  '3,0': 2, // Finale: card(1) → buttons(2)
 };
 
-export function useJourneyNav() {
+export function useJourneyNav(enabled = true) {
   const [pos, setPos] = useState<[number, number]>([0, 0]);
   const [sectionStep, setSectionStep] = useState(0);
 
@@ -87,6 +87,7 @@ export function useJourneyNav() {
   const isLast = seqIdx === SEQUENCE.length - 1;
 
   useEffect(() => {
+    if (!enabled) return;
     const onKey = (e: KeyboardEvent) => {
       const map: Record<string, Dir> = {
         ArrowRight: 'right', ArrowLeft: 'left',
@@ -98,7 +99,7 @@ export function useJourneyNav() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go, next]);
+  }, [go, next, enabled]);
 
   return { pos, go, goTo, canGo, next, isLast, seqIdx, sectionStep };
 }

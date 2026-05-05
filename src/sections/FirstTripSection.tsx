@@ -8,26 +8,26 @@ import { useImageViewer } from '../context/ImageContext';
 interface Props { isActive: boolean; step: number }
 
 const PHOTOS = [
-  { src: 'https://picsum.photos/seed/couple6/500/500', caption: '설레던 출발',  rotate: -7, top: '5%',  left: '6%',  width: 220, photoHeight: 195, delay: 0    },
-  { src: 'https://picsum.photos/seed/couple7/500/500', caption: '함께한 풍경', rotate:  3, top: '20%', left: '34%', width: 245, photoHeight: 215, delay: 0.18 },
-  { src: 'https://picsum.photos/seed/couple8/500/500', caption: '잊지 못할 밤', rotate:  9, top:  '3%', left: '63%', width: 218, photoHeight: 192, delay: 0.36 },
+  { src: 'https://picsum.photos/seed/couple6/500/500', caption: '설레던 출발',  rotate: -7, top: '3%',  left: '4%',  width: 278, photoHeight: 248, delay: 0    },
+  { src: 'https://picsum.photos/seed/couple7/500/500', caption: '함께한 풍경', rotate:  3, top: '16%', left: '31%', width: 302, photoHeight: 268, delay: 0.18 },
+  { src: 'https://picsum.photos/seed/couple8/500/500', caption: '잊지 못할 밤', rotate:  9, top:  '2%', left: '62%', width: 272, photoHeight: 242, delay: 0.36 },
 ];
 
 export default function FirstTripSection({ isActive, step }: Props) {
   const { openViewer } = useImageViewer();
   const [srcs, setSrcs] = useState(PHOTOS.map(p => p.src));
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 60px', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
       <div style={{ maxWidth: 1100, width: '100%', position: 'relative' }}>
 
-        <div style={{ position: 'relative', height: 360 }}>
+        <div style={{ position: 'relative', height: 440 }}>
           {PHOTOS.map((p, i) => (
             <motion.div
               key={i}
               animate={{ opacity: show(i) ? 1 : 0, y: show(i) ? 0 : 32, scale: show(i) ? 1 : 0.88 }}
-              transition={{ duration: 0.7, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 130, damping: 16 }}
+              transition={{ duration: 0.35, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 130, damping: 16 }}
               whileHover={{ scale: 1.05, zIndex: 10, rotate: p.rotate * 0.3 }}
               style={{ position: 'absolute', left: p.left, top: p.top, rotate: p.rotate, zIndex: i + 1 }}
             >
@@ -55,7 +55,7 @@ export default function FirstTripSection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(2) ? 1 : 0, y: show(2) ? 0 : 20 }}
-          transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
+          transition={{ duration: 0.3, type: 'spring', stiffness: 100 }}
           style={{ maxWidth: 560, margin: '0 auto' }}
         >
           <TextCard pill="첫 여행" editable>

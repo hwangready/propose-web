@@ -7,7 +7,7 @@ interface Props { isActive: boolean; step: number }
 const HEARTS = ['♡', '♥', '♡', '♥', '♡'];
 
 export default function PromiseSection({ isActive, step }: Props) {
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 60px', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -25,7 +25,7 @@ export default function PromiseSection({ isActive, step }: Props) {
 
       <motion.div
         animate={{ opacity: show(0) ? 1 : 0, scale: show(0) ? 1 : 0.92 }}
-        transition={{ duration: 0.6, type: 'spring', stiffness: 120 }}
+        transition={{ duration: 0.3, type: 'spring', stiffness: 120 }}
         style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '56px 80px', textAlign: 'center', maxWidth: 600, boxShadow: '0 4px 32px rgba(0,0,0,0.5)', position: 'relative', zIndex: 1 }}
       >
         <motion.div
@@ -42,7 +42,7 @@ export default function PromiseSection({ isActive, step }: Props) {
 
         <motion.div
           animate={{ opacity: show(1) ? 1 : 0, y: show(1) ? 0 : 16 }}
-          transition={{ duration: 0.6, type: 'spring', stiffness: 120 }}
+          transition={{ duration: 0.3, type: 'spring', stiffness: 120 }}
           style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.9, fontWeight: 300 }}
           onClick={e => e.stopPropagation()}
         >

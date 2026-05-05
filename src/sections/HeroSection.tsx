@@ -8,9 +8,9 @@ import AudioUploader from '../components/AudioUploader';
 interface Props { isActive: boolean; step: number }
 
 const PHOTOS = [
-  { src: 'https://picsum.photos/seed/couple1/500/600', caption: '우리의 첫 페이지', rotate: -9, left: '3%',  top: '5%',  width: 248, photoHeight: 218, delay: 0.1 },
-  { src: 'https://picsum.photos/seed/couple2/500/600', caption: '기억하고 싶은 날', rotate:  6, left: '57%', top: '4%',  width: 232, photoHeight: 202, delay: 0.25 },
-  { src: 'https://picsum.photos/seed/couple3/500/600', caption: '함께라서 좋아',    rotate: -4, left: '28%', top: '46%', width: 242, photoHeight: 212, delay: 0.4 },
+  { src: 'https://picsum.photos/seed/couple1/500/600', caption: '우리의 첫 페이지', rotate: -9, left: '3%',  top: '3%',  width: 305, photoHeight: 272, delay: 0.1 },
+  { src: 'https://picsum.photos/seed/couple2/500/600', caption: '기억하고 싶은 날', rotate:  6, left: '55%', top: '3%',  width: 288, photoHeight: 256, delay: 0.25 },
+  { src: 'https://picsum.photos/seed/couple3/500/600', caption: '함께라서 좋아',    rotate: -4, left: '25%', top: '44%', width: 296, photoHeight: 264, delay: 0.4 },
 ];
 
 const MAGNETS = [
@@ -38,7 +38,7 @@ export default function HeroSection({ isActive, step }: Props) {
   const { openViewer } = useImageViewer();
   const [srcs, setSrcs] = useState(PHOTOS.map(p => p.src));
 
-  const show = (n: number) => isActive && step >= n;
+  const show = (n: number) => isActive && step >= n + 1;
 
   return (
     <section style={{ width: '100%', height: '100%', position: 'relative', background: 'transparent', overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -69,7 +69,7 @@ export default function HeroSection({ isActive, step }: Props) {
           key={i}
           animate={{ opacity: show(i) ? 1 : 0, scale: show(i) ? 1 : 0.82, rotate: p.rotate }}
           initial={{ rotate: p.rotate }}
-          transition={{ duration: 0.7, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 140, damping: 16 }}
+          transition={{ duration: 0.35, delay: show(i) ? p.delay : 0, type: 'spring', stiffness: 140, damping: 16 }}
           whileHover={{ scale: 1.04, zIndex: 10, rotate: p.rotate * 0.4 }}
           style={{ position: 'absolute', left: p.left, top: p.top, zIndex: 2, cursor: 'default' }}
         >
@@ -105,7 +105,7 @@ export default function HeroSection({ isActive, step }: Props) {
       {/* 중앙 텍스트 스티커 */}
       <motion.div
         animate={{ opacity: show(3) ? 1 : 0, scale: show(3) ? 1 : 0.88 }}
-        transition={{ duration: 0.65, type: 'spring', stiffness: 180 }}
+        transition={{ duration: 0.33, type: 'spring', stiffness: 180 }}
         style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', zIndex: 5, background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '20px 36px' }}
       >
         <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 'clamp(38px,4.2vw,58px)', color: '#f0d4e0', lineHeight: 1.2, letterSpacing: '-0.5px' }} onClick={e => e.stopPropagation()}>

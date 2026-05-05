@@ -9,6 +9,7 @@ interface Props {
   isFullscreen: boolean;
   toggleFullscreen: () => void;
   onPresentMode: () => void;
+  onIntroConfig: () => void;
   progress: number;
   isLast: boolean;
 }
@@ -17,7 +18,7 @@ const SPEED_OPTIONS = [3, 5, 8, 10];
 
 export default function ControlsFAB({
   autoPlay, setAutoPlay, autoSec, setAutoSec,
-  isFullscreen, toggleFullscreen, onPresentMode,
+  isFullscreen, toggleFullscreen, onPresentMode, onIntroConfig,
   progress, isLast,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -69,6 +70,16 @@ export default function ControlsFAB({
               transition={{ duration: 0.2, ease: 'easeOut' }}
               style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 200 }}
             >
+              {/* 인트로 설정 */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={(e) => { e.stopPropagation(); setOpen(false); onIntroConfig(); }}
+                style={itemStyle}
+              >
+                <span>⚙</span><span>인트로 설정</span>
+              </motion.button>
+
               {/* 연출 모드 */}
               <motion.button
                 whileHover={{ scale: 1.02 }}

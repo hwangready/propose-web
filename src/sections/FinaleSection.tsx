@@ -150,6 +150,23 @@ export default function FinaleSection({ isActive, step }: Props) {
     return stop;
   }, [answered]);
 
+  // @keyframes를 document.head에 주입 — JSX <style> 태그는 일부 환경에서 keyframe 미적용
+  useEffect(() => {
+    if (!answered) return;
+    const style = document.createElement('style');
+    style.dataset.id = 'polaroid-rain';
+    style.textContent = `
+      @keyframes polaroid-rain {
+        0%   { transform: translateY(-320px); opacity: 0; }
+        7%   { opacity: 0.92; }
+        89%  { opacity: 0.88; }
+        100% { transform: translateY(110vh);  opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { style.remove(); };
+  }, [answered]);
+
   const handleYes = () => { setAnswered(true); setTimeout(() => triggerPetals(), 200); };
   const noScale = Math.max(0.4, 1 - noCount * 0.14);
   const noLabel = noCount === 0 ? '음... 글쎄' : NO_MESSAGES[noCount - 1];
@@ -175,23 +192,13 @@ export default function FinaleSection({ isActive, step }: Props) {
               background: 'linear-gradient(160deg, #0e0516 0%, #190b22 45%, #0b0f1f 100%)',
             }}
           >
-            {/* CSS keyframe for falling polaroids */}
-            <style>{`
-              @keyframes rain-fall {
-                0%   { transform: translateY(-300px); opacity: 0; }
-                8%   { opacity: 0.92; }
-                88%  { opacity: 0.85; }
-                100% { transform: translateY(110vh);  opacity: 0; }
-              }
-            `}</style>
-
             {/* 쏟아지는 폴라로이드 */}
             {RAIN_ITEMS.map((item, i) => (
               <div
                 key={i}
                 style={{
                   position: 'absolute', left: item.left, top: 0, zIndex: 1,
-                  animation: `rain-fall ${item.duration}s ${item.delay}s linear infinite`,
+                  animation: `polaroid-rain ${item.duration}s ${item.delay}s linear infinite`,
                   willChange: 'transform, opacity',
                 }}
               >

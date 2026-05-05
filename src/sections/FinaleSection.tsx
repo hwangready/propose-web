@@ -20,17 +20,15 @@ const COLLAGE_PHOTOS_INIT = [
   'https://picsum.photos/seed/couple28/900/600',
 ];
 
-// 8 polaroid positions: offset from screen center (% of screen), each flies in from `from`
-const COLLAGE = [
-  { ox: '-44%', oy: '-32%', rotate: -13, w: 230, from: { x: -700, y: -500 }, delay: 0.0  },
-  { ox:  '10%', oy: '-38%', rotate:   9, w: 205, from: { x:  400, y: -600 }, delay: 0.11 },
-  { ox:  '42%', oy: '-20%', rotate:  -5, w: 215, from: { x:  800, y: -250 }, delay: 0.22 },
-  { ox: '-52%', oy:  '10%', rotate:  15, w: 198, from: { x: -800, y:  150 }, delay: 0.34 },
-  { ox:  '-6%', oy:   '6%', rotate:  -8, w: 252, from: { x: -250, y:  700 }, delay: 0.08 },
-  { ox:  '30%', oy:  '12%', rotate:   7, w: 224, from: { x:  550, y:  500 }, delay: 0.19 },
-  { ox: '-30%', oy:  '40%', rotate: -17, w: 200, from: { x: -600, y:  700 }, delay: 0.29 },
-  { ox:  '40%', oy:  '36%', rotate:  11, w: 212, from: { x:  700, y:  700 }, delay: 0.40 },
-];
+// 24 polaroids raining from top — deterministic pseudo-random via index math
+const RAIN_ITEMS = Array.from({ length: 24 }, (_, i) => ({
+  photoIdx: i % 8,
+  left:     `${2 + ((i * 89 + 7) % 92)}%`,
+  w:        88 + (i * 41) % 76,
+  rotate:   ((i * 23) % 40) - 20,
+  duration: 4 + (i * 17 % 50) / 10,
+  delay:    -((i * 31) % 80) / 10,   // negative = already mid-fall on mount
+}));
 
 interface Petal { x:number; y:number; vx:number; vy:number; color:string; angle:number; angVel:number; rx:number; ry:number; opacity:number }
 
@@ -165,61 +163,69 @@ export default function FinaleSection({ isActive, step }: Props) {
     >
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 100, pointerEvents: 'none' }} />
 
-      {/* 청혼 승낙 아웃트로 — 밝은 배경 + 폴라로이드 날아오기 */}
+      {/* 청혼 승낙 아웃트로 — 폴라로이드 레인 */}
       <AnimatePresence>
         {answered && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#fffff4' }}
+            transition={{ duration: 0.6 }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden',
+              background: 'linear-gradient(160deg, #0e0516 0%, #190b22 45%, #0b0f1f 100%)',
+            }}
           >
-            {/* 날아오는 폴라로이드 사진들 */}
-            {COLLAGE.map((c, i) => (
-              <motion.div
+            {/* CSS keyframe for falling polaroids */}
+            <style>{`
+              @keyframes rain-fall {
+                0%   { transform: translateY(-300px); opacity: 0; }
+                8%   { opacity: 0.92; }
+                88%  { opacity: 0.85; }
+                100% { transform: translateY(110vh);  opacity: 0; }
+              }
+            `}</style>
+
+            {/* 쏟아지는 폴라로이드 */}
+            {RAIN_ITEMS.map((item, i) => (
+              <div
                 key={i}
-                initial={{ x: c.from.x, y: c.from.y, opacity: 0, rotate: c.rotate * 2 }}
-                animate={{ x: 0, y: 0, opacity: 1, rotate: c.rotate }}
-                transition={{ type: 'spring', stiffness: 110, damping: 18, delay: c.delay }}
                 style={{
-                  position: 'absolute',
-                  left: '50%', top: '50%',
-                  translateX: `calc(-50% + ${c.ox})`,
-                  translateY: `calc(-50% + ${c.oy})`,
-                  cursor: 'zoom-in',
-                  zIndex: 2 + i,
-                }}
-                onClick={e => {
-                  e.stopPropagation();
-                  openViewer(collagePhotos[i], newSrc => setCollagePhotos(prev => prev.map((s, j) => j === i ? newSrc : s)));
+                  position: 'absolute', left: item.left, top: 0, zIndex: 1,
+                  animation: `rain-fall ${item.duration}s ${item.delay}s linear infinite`,
+                  willChange: 'transform, opacity',
                 }}
               >
-                <div style={{
-                  background: '#fff', padding: '8px 8px 34px',
-                  width: c.w, boxShadow: '0 10px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)',
-                }}>
-                  <div style={{ position: 'relative', overflow: 'hidden' }}>
+                <div style={{ transform: `rotate(${item.rotate}deg)` }}>
+                  <div style={{
+                    background: '#fff', padding: '5px 5px 22px', width: item.w,
+                    boxShadow: '0 8px 28px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)',
+                  }}>
                     <img
-                      src={collagePhotos[i]}
+                      src={collagePhotos[item.photoIdx]}
                       alt=""
-                      style={{ width: '100%', height: c.w * 0.78, objectFit: 'cover', display: 'block' }}
+                      style={{ width: '100%', height: item.w * 0.74, objectFit: 'cover', display: 'block' }}
                     />
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: 1 }}
-                      style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: '#fff', pointerEvents: 'none' }}
-                    >⊕</motion.div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
 
             {/* 텍스트 오버레이 */}
-            <div style={{ position: 'absolute', inset: 0, zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none' }}>
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
+              background: 'radial-gradient(ellipse 55% 44% at 50% 50%, rgba(0,0,0,0.52) 0%, transparent 100%)',
+            }}>
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.85, duration: 0.55, type: 'spring', stiffness: 120 }}
-                style={{ fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(52px,6vw,88px)', color: '#c94b6d', textShadow: '0 2px 16px rgba(201,75,109,0.2)', lineHeight: 1.15 }}
+                transition={{ delay: 0.7, duration: 0.65, type: 'spring', stiffness: 110 }}
+                style={{
+                  fontFamily: "'Dancing Script', cursive",
+                  fontSize: 'clamp(52px,6vw,90px)', lineHeight: 1.15, textAlign: 'center',
+                  color: '#ffb8cc',
+                  textShadow: '0 0 48px rgba(255,120,160,0.65), 0 2px 18px rgba(0,0,0,0.5)',
+                }}
                 onClick={e => e.stopPropagation()}
               >
                 <span style={{ pointerEvents: 'auto' }}>
@@ -229,8 +235,13 @@ export default function FinaleSection({ isActive, step }: Props) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.3, duration: 0.5 }}
-                style={{ fontFamily: "'Noto Sans KR', sans-serif", fontSize: 18, color: '#9a7a80', fontWeight: 300, letterSpacing: '1.5px' }}
+                transition={{ delay: 1.25, duration: 0.6 }}
+                style={{
+                  fontFamily: "'Noto Sans KR', sans-serif",
+                  fontSize: 18, fontWeight: 300, letterSpacing: '2px',
+                  color: 'rgba(255,200,215,0.7)',
+                  textShadow: '0 2px 10px rgba(0,0,0,0.7)',
+                }}
                 onClick={e => e.stopPropagation()}
               >
                 <span style={{ pointerEvents: 'auto' }}>

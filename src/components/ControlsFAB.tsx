@@ -12,6 +12,8 @@ interface Props {
   onIntroConfig: () => void;
   progress: number;
   isLast: boolean;
+  canvasMode: 'journey' | 'clothesline';
+  onModeToggle: () => void;
 }
 
 const SPEED_OPTIONS = [3, 5, 8, 10];
@@ -19,7 +21,7 @@ const SPEED_OPTIONS = [3, 5, 8, 10];
 export default function ControlsFAB({
   autoPlay, setAutoPlay, autoSec, setAutoSec,
   isFullscreen, toggleFullscreen, onPresentMode, onIntroConfig,
-  progress, isLast,
+  progress, isLast, canvasMode, onModeToggle,
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -70,6 +72,17 @@ export default function ControlsFAB({
               transition={{ duration: 0.2, ease: 'easeOut' }}
               style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 200 }}
             >
+              {/* 모드 전환 */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={(e) => { e.stopPropagation(); setOpen(false); onModeToggle(); }}
+                style={{ ...itemStyle, color: canvasMode === 'clothesline' ? '#c8905a' : '#9ecfba', border: `1px solid ${canvasMode === 'clothesline' ? 'rgba(200,144,90,0.6)' : 'rgba(100,170,130,0.35)'}` }}
+              >
+                <span>{canvasMode === 'clothesline' ? '🗺' : '📸'}</span>
+                <span>{canvasMode === 'clothesline' ? '여정 모드' : '줄사진 모드'}</span>
+              </motion.button>
+
               {/* 인트로 설정 */}
               <motion.button
                 whileHover={{ scale: 1.02 }}

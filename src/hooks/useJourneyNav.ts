@@ -84,6 +84,12 @@ export function useJourneyNav(enabled = true) {
     }
   }, [seqIdx, sectionStep, pos]);
 
+  const nextSection = useCallback(() => {
+    setSectionStep(0);
+    const nextPos = SEQUENCE[seqIdx + 1];
+    if (nextPos) setPos(nextPos);
+  }, [seqIdx]);
+
   const isLast = seqIdx === SEQUENCE.length - 1;
 
   useEffect(() => {
@@ -101,5 +107,5 @@ export function useJourneyNav(enabled = true) {
     return () => window.removeEventListener('keydown', onKey);
   }, [go, next, enabled]);
 
-  return { pos, go, goTo, canGo, next, isLast, seqIdx, sectionStep };
+  return { pos, go, goTo, canGo, next, nextSection, isLast, seqIdx, sectionStep };
 }

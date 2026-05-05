@@ -8,6 +8,7 @@ import DirectionArrows from './components/DirectionArrows';
 import ImageViewer from './components/ImageViewer';
 import ControlsFAB from './components/ControlsFAB';
 import IntroConfigModal from './components/IntroConfigModal';
+import ClotheslineCanvas from './components/ClotheslineCanvas';
 import GoogleIntro from './screens/GoogleIntro';
 import ChatGPTIntro from './screens/ChatGPTIntro';
 import { loadIntroConfig } from './config/introConfig';
@@ -15,6 +16,7 @@ import { ImageProvider, useImageViewer } from './context/ImageContext';
 import { useJourneyNav } from './hooks/useJourneyNav';
 
 type Phase = 'google' | 'chatgpt' | 'journey';
+type CanvasMode = 'journey' | 'clothesline';
 
 const SECTION_NAMES = [
   '인트로', '처음 만난 날', '우리가 된 날',
@@ -29,7 +31,8 @@ function AppInner() {
   const introConfig = useMemo(() => loadIntroConfig(), []);
   const [phase, setPhase] = useState<Phase>(introConfig.enabled ? introConfig.introMode : 'journey');
   const [showIntroModal, setShowIntroModal] = useState(false);
-  const { pos, go, goTo, canGo, next, isLast, seqIdx, sectionStep } = useJourneyNav(phase === 'journey');
+  const [canvasMode, setCanvasMode] = useState<CanvasMode>('journey');
+  const { pos, go, goTo, canGo, next, nextSection, isLast, seqIdx, sectionStep } = useJourneyNav(phase === 'journey');
   const [presentMode, setPresentMode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
   const [autoSec, setAutoSec] = useState(1.5);
@@ -63,7 +66,9 @@ function AppInner() {
       return;
     }
     // Climax section (2,2) holds for 18s to show all 3 flip messages
-    const effectiveSec = pos[0] === 2 && pos[1] === 2 ? 18 : autoSec;
+    const effectiveSec = canvasMode === 'clothesline'
+      ? autoSec
+      : (pos[0] === 2 && pos[1] === 2 ? 18 : autoSec);
 
     setProgress(0);
     startTimeRef.current = performance.now();
@@ -77,7 +82,8 @@ function AppInner() {
     rafRef.current = requestAnimationFrame(tick);
 
     intervalRef.current = setInterval(() => {
-      next();
+      if (canvasMode === 'clothesline') nextSection();
+      else next();
       startTimeRef.current = performance.now();
       setProgress(0);
     }, effectiveSec * 1000);
@@ -86,14 +92,17 @@ function AppInner() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [autoPlay, autoSec, pos, isLast, next, phase]);
+  }, [autoPlay, autoSec, pos, isLast, next, nextSection, phase, canvasMode]);
 
   return (
     <>
-      {phase === 'journey' && <CustomCursor />}
-      <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
-      <NavigationMap pos={pos} goTo={goTo} />
-      <DirectionArrows canGo={canGo} go={go} />
+      {phase === 'journey' && canvasMode === 'journey' && <CustomCursor />}
+      {canvasMode === 'journey'
+        ? <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
+        : <ClotheslineCanvas seqIdx={seqIdx} nextSection={nextSection} />
+      }
+      {canvasMode === 'journey' && <NavigationMap pos={pos} goTo={goTo} />}
+      {canvasMode === 'journey' && <DirectionArrows canGo={canGo} go={go} />}
 
       {/* 그레인 텍스처 */}
       <div style={{
@@ -144,6 +153,8 @@ function AppInner() {
         onIntroConfig={() => setShowIntroModal(true)}
         progress={progress}
         isLast={isLast}
+        canvasMode={canvasMode}
+        onModeToggle={() => setCanvasMode(m => m === 'journey' ? 'clothesline' : 'journey')}
       />
 
       <AnimatePresence>

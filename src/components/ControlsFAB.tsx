@@ -12,7 +12,7 @@ interface Props {
   onIntroConfig: () => void;
   progress: number;
   isLast: boolean;
-  canvasMode: 'journey' | 'clothesline';
+  canvasMode: 'journey' | 'clothesline' | 'scrapbook';
   onModeToggle: () => void;
 }
 
@@ -77,10 +77,13 @@ export default function ControlsFAB({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={(e) => { e.stopPropagation(); setOpen(false); onModeToggle(); }}
-                style={{ ...itemStyle, color: canvasMode === 'clothesline' ? '#c8905a' : '#9ecfba', border: `1px solid ${canvasMode === 'clothesline' ? 'rgba(200,144,90,0.6)' : 'rgba(100,170,130,0.35)'}` }}
+                style={{ ...itemStyle,
+                  color: canvasMode === 'journey' ? '#9ecfba' : canvasMode === 'clothesline' ? '#e8a0b4' : '#c8905a',
+                  border: `1px solid ${canvasMode === 'journey' ? 'rgba(100,170,130,0.35)' : canvasMode === 'clothesline' ? 'rgba(232,160,180,0.5)' : 'rgba(200,144,90,0.6)'}`,
+                }}
               >
-                <span>{canvasMode === 'clothesline' ? '🗺' : '📸'}</span>
-                <span>{canvasMode === 'clothesline' ? '여정 모드' : '줄사진 모드'}</span>
+                <span>{canvasMode === 'journey' ? '📸' : canvasMode === 'clothesline' ? '📖' : '🗺'}</span>
+                <span>{canvasMode === 'journey' ? '줄사진 모드' : canvasMode === 'clothesline' ? '스크랩북 모드' : '여정 모드'}</span>
               </motion.button>
 
               {/* 인트로 설정 */}

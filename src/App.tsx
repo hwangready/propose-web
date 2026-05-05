@@ -9,14 +9,16 @@ import ImageViewer from './components/ImageViewer';
 import ControlsFAB from './components/ControlsFAB';
 import IntroConfigModal from './components/IntroConfigModal';
 import ClotheslineCanvas from './components/ClotheslineCanvas';
+import ScrapbookCanvas from './components/ScrapbookCanvas';
 import GoogleIntro from './screens/GoogleIntro';
 import ChatGPTIntro from './screens/ChatGPTIntro';
+import ModeSelectScreen from './screens/ModeSelectScreen';
 import { loadIntroConfig } from './config/introConfig';
 import { ImageProvider, useImageViewer } from './context/ImageContext';
 import { useJourneyNav } from './hooks/useJourneyNav';
 
-type Phase = 'google' | 'chatgpt' | 'journey';
-type CanvasMode = 'journey' | 'clothesline';
+type Phase = 'google' | 'chatgpt' | 'select' | 'journey';
+type CanvasMode = 'journey' | 'clothesline' | 'scrapbook';
 
 const SECTION_NAMES = [
   '인트로', '처음 만난 날', '우리가 된 날',
@@ -35,7 +37,7 @@ function AppInner() {
   const { pos, go, goTo, canGo, next, nextSection, isLast, seqIdx, sectionStep } = useJourneyNav(phase === 'journey');
   const [presentMode, setPresentMode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
-  const [autoSec, setAutoSec] = useState(1.5);
+  const [autoSec, setAutoSec] = useState(3);
   const [progress, setProgress] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -66,7 +68,7 @@ function AppInner() {
       return;
     }
     // Climax section (2,2) holds for 18s to show all 3 flip messages
-    const effectiveSec = canvasMode === 'clothesline'
+    const effectiveSec = canvasMode !== 'journey'
       ? autoSec
       : (pos[0] === 2 && pos[1] === 2 ? 18 : autoSec);
 
@@ -82,7 +84,7 @@ function AppInner() {
     rafRef.current = requestAnimationFrame(tick);
 
     intervalRef.current = setInterval(() => {
-      if (canvasMode === 'clothesline') nextSection();
+      if (canvasMode !== 'journey') nextSection();
       else next();
       startTimeRef.current = performance.now();
       setProgress(0);
@@ -99,7 +101,9 @@ function AppInner() {
       {phase === 'journey' && canvasMode === 'journey' && <CustomCursor />}
       {canvasMode === 'journey'
         ? <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
-        : <ClotheslineCanvas seqIdx={seqIdx} nextSection={nextSection} />
+        : canvasMode === 'clothesline'
+        ? <ClotheslineCanvas seqIdx={seqIdx} nextSection={nextSection} />
+        : <ScrapbookCanvas seqIdx={seqIdx} nextSection={nextSection} />
       }
       {canvasMode === 'journey' && <NavigationMap pos={pos} goTo={goTo} />}
       {canvasMode === 'journey' && <DirectionArrows canGo={canGo} go={go} />}
@@ -132,13 +136,70 @@ function AppInner() {
         </motion.div>
       </AnimatePresence>
 
-      {/* 카운터 — 하단 중앙 */}
+      {/* 하단 중앙 재생/정지 + 속도 컨트롤 */}
       <div style={{
-        position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 200, fontFamily: "'Courier New',monospace", fontSize: 10,
-        color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', pointerEvents: 'none',
+        position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 200, display: 'flex', alignItems: 'center', gap: 8,
+        background: 'rgba(12,8,4,0.75)', backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(200,160,100,0.14)',
+        borderRadius: 40, padding: '7px 16px',
       }}>
-        {String(seqIdx + 1).padStart(2, '0')} / 12
+        {/* 카운터 */}
+        <span style={{
+          fontFamily: "'Courier New',monospace", fontSize: 10,
+          color: 'rgba(200,160,100,0.5)', letterSpacing: '2px', minWidth: 38,
+        }}>
+          {String(seqIdx + 1).padStart(2, '0')}&nbsp;/&nbsp;12
+        </span>
+
+        {/* 진행 바 */}
+        <div style={{ width: 60, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
+          <motion.div
+            animate={{ width: `${progress * 100}%` }}
+            transition={{ duration: 0.1 }}
+            style={{ height: '100%', background: 'rgba(200,144,90,0.7)', borderRadius: 1 }}
+          />
+        </div>
+
+        {/* 재생/정지 버튼 */}
+        <button
+          onClick={() => setAutoPlay(p => !p)}
+          style={{
+            width: 28, height: 28, borderRadius: '50%', border: 'none',
+            background: autoPlay ? 'rgba(200,144,90,0.18)' : 'rgba(93,201,165,0.18)',
+            color: autoPlay ? '#c8905a' : '#5dc9a5',
+            cursor: 'pointer', fontSize: 11,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            outline: 'none',
+          }}
+        >
+          {autoPlay ? '⏸' : '▶'}
+        </button>
+
+        {/* 구분선 */}
+        <div style={{ width: 1, height: 16, background: 'rgba(200,160,100,0.18)' }} />
+
+        {/* 속도 조절 */}
+        <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9, color: 'rgba(180,140,90,0.45)', letterSpacing: '1px' }}>
+          SPD
+        </span>
+        {[1, 3, 5, 8].map(s => (
+          <button
+            key={s}
+            onClick={() => setAutoSec(s)}
+            style={{
+              height: 22, minWidth: 26, paddingInline: 6,
+              borderRadius: 11, border: 'none',
+              background: autoSec === s ? 'rgba(200,144,90,0.38)' : 'transparent',
+              color: autoSec === s ? '#c8905a' : 'rgba(200,160,100,0.35)',
+              fontFamily: "'Courier New',monospace", fontSize: 10,
+              cursor: 'pointer', outline: 'none',
+              transition: 'background 0.2s, color 0.2s',
+            }}
+          >
+            {s}s
+          </button>
+        ))}
       </div>
 
       {/* 통합 FAB 컨트롤 */}
@@ -154,7 +215,7 @@ function AppInner() {
         progress={progress}
         isLast={isLast}
         canvasMode={canvasMode}
-        onModeToggle={() => setCanvasMode(m => m === 'journey' ? 'clothesline' : 'journey')}
+        onModeToggle={() => setCanvasMode(m => m === 'journey' ? 'clothesline' : m === 'clothesline' ? 'scrapbook' : 'journey')}
       />
 
       <AnimatePresence>
@@ -171,37 +232,30 @@ function AppInner() {
         )}
       </AnimatePresence>
 
-      {/* 인트로 진행 중 journey 완전 차단 — 플리커 방지 */}
+      {/* 인트로/선택 중 journey 완전 차단 */}
       {phase !== 'journey' && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9990, background: '#1a1a1a' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9990, background: '#0a0806' }} />
       )}
 
-      {/* 인트로 화면 오버레이 */}
+      {/* 인트로 + 모드 선택 오버레이 */}
       <AnimatePresence mode="wait">
-        {phase !== 'journey' && (
-          phase === 'google' ? (
-            <motion.div
-              key="google"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
-            >
-              <GoogleIntro config={introConfig} onNext={() => setPhase('journey')} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chatgpt"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
-            >
-              <ChatGPTIntro config={introConfig} onStart={() => setPhase('journey')} />
-            </motion.div>
-          )
+        {phase === 'google' && (
+          <motion.div key="google" initial={{ opacity: 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }} style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+            <GoogleIntro config={introConfig} onNext={() => setPhase('select')} />
+          </motion.div>
+        )}
+        {phase === 'chatgpt' && (
+          <motion.div key="chatgpt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }} style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+            <ChatGPTIntro config={introConfig} onStart={() => setPhase('select')} />
+          </motion.div>
+        )}
+        {phase === 'select' && (
+          <motion.div key="select" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }} style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+            <ModeSelectScreen onSelect={(mode) => { setCanvasMode(mode); setPhase('journey'); }} />
+          </motion.div>
         )}
       </AnimatePresence>
 

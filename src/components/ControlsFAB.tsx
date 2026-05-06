@@ -158,7 +158,7 @@ export default function ControlsFAB({
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.93 }}
-          onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+          onClick={(e) => { e.stopPropagation(); if (!open) setAutoPlay(false); setOpen(o => !o); }}
           style={{
             width: 48, height: 48, borderRadius: '50%',
             background: open ? 'rgba(93,202,165,0.25)' : 'rgba(8,22,14,0.92)',

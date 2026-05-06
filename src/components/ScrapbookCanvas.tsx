@@ -118,6 +118,137 @@ function renderDeco(type: number, color: string, strokeColor: string) {
     );
     // Small triangle
     case 12: return <path d="M0,-7 L6.5,5 L-6.5,5Z" fill={color} style={{ borderRadius: '2px' }} />;
+    // ── New types from reference images ──────────────────────────────────────
+    // Rainbow with clouds
+    case 14: return (
+      <g>
+        <path d="M-9,3 A9,9 0 0 1 9,3" fill="none" stroke="rgba(255,90,90,0.88)" strokeWidth="2.2" strokeLinecap="round"/>
+        <path d="M-7,3 A7,7 0 0 1 7,3" fill="none" stroke="rgba(255,190,50,0.88)" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M-5,3 A5,5 0 0 1 5,3" fill="none" stroke="rgba(80,200,130,0.88)" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M-3,3 A3,3 0 0 1 3,3" fill="none" stroke="rgba(80,160,255,0.88)" strokeWidth="1.6" strokeLinecap="round"/>
+        <path d="M-11,2 C-11,-1 -8,-2 -8,2 C-9,3 -11,3 -11,2Z" fill="rgba(255,255,255,0.92)"/>
+        <path d="M-9,2 C-9,0 -7,-0.5 -7,2Z" fill="rgba(255,255,255,0.92)"/>
+        <path d="M11,2 C11,-1 8,-2 8,2 C9,3 11,3 11,2Z" fill="rgba(255,255,255,0.92)"/>
+        <path d="M9,2 C9,0 7,-0.5 7,2Z" fill="rgba(255,255,255,0.92)"/>
+      </g>
+    );
+    // Smiley face
+    case 15: return (
+      <g>
+        <circle r="7.5" fill={color}/>
+        <circle cx="-2.5" cy="-1.5" r="1.3" fill="rgba(50,30,10,0.72)"/>
+        <circle cx="2.5" cy="-1.5" r="1.3" fill="rgba(50,30,10,0.72)"/>
+        <path d="M-3.5,2.5 Q0,5.5 3.5,2.5" fill="none" stroke="rgba(50,30,10,0.72)" strokeWidth="1.4" strokeLinecap="round"/>
+        <circle cx="-6" cy="-3" r="1.8" fill={color} opacity="0.4"/>
+        <circle cx="6" cy="-3" r="1.8" fill={color} opacity="0.4"/>
+      </g>
+    );
+    // Sun with rays
+    case 16: return (
+      <g>
+        {[0,45,90,135,180,225,270,315].map(a => (
+          <line key={a}
+            x1={+(Math.cos(a*Math.PI/180)*5.5).toFixed(2)} y1={+(Math.sin(a*Math.PI/180)*5.5).toFixed(2)}
+            x2={+(Math.cos(a*Math.PI/180)*8).toFixed(2)} y2={+(Math.sin(a*Math.PI/180)*8).toFixed(2)}
+            stroke={strokeColor} strokeWidth="1.6" strokeLinecap="round"/>
+        ))}
+        <circle r="4.5" fill={color}/>
+        <circle cx="-1.5" cy="-1" r="1" fill="rgba(255,255,255,0.4)"/>
+      </g>
+    );
+    // Cherries
+    case 17: return (
+      <g>
+        <path d="M0,-1 C-1,-5 -3,-8 -5,-7" fill="none" stroke="rgba(90,140,70,0.85)" strokeWidth="1.3" strokeLinecap="round"/>
+        <path d="M0,-1 C1,-5 3,-7 5,-6" fill="none" stroke="rgba(90,140,70,0.85)" strokeWidth="1.3" strokeLinecap="round"/>
+        <ellipse cx="0" cy="-5.5" rx="2.2" ry="1.1" transform="rotate(-15)" fill="rgba(100,165,75,0.85)"/>
+        <circle cx="-5" cy="-5" r="3.2" fill={color}/>
+        <circle cx="5" cy="-4" r="3.2" fill={color}/>
+        <circle cx="-6" cy="-6.2" r="0.9" fill="rgba(255,255,255,0.45)"/>
+        <circle cx="4" cy="-5.2" r="0.9" fill="rgba(255,255,255,0.45)"/>
+      </g>
+    );
+    // Ribbon / bow
+    case 18: return (
+      <g>
+        <path d="M0,0 C-2,-4 -8,-5 -7,-1.5 C-6,1 -2,1.5 0,0Z" fill={color} opacity="0.9"/>
+        <path d="M0,0 C2,-4 8,-5 7,-1.5 C6,1 2,1.5 0,0Z" fill={color} opacity="0.9"/>
+        <path d="M0,0 C-2,3 -4,6 -3,7" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+        <path d="M0,0 C2,3 4,6 3,7" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+        <circle r="2" fill={strokeColor}/>
+      </g>
+    );
+    // Cactus
+    case 19: return (
+      <g>
+        <rect x="-2.2" y="-3" width="4.4" height="10" rx="2.2" fill={color}/>
+        <rect x="-5.5" y="-1.5" width="3.5" height="2" rx="1" fill={color}/>
+        <rect x="-6.5" y="-4.5" width="2.2" height="3.5" rx="1.1" fill={color}/>
+        <rect x="2" y="0.5" width="3.5" height="2" rx="1" fill={color}/>
+        <rect x="4.3" y="-2.5" width="2.2" height="3.5" rx="1.1" fill={color}/>
+        <rect x="-3" y="6.5" width="6" height="1.5" rx="0.75" fill={strokeColor} opacity="0.6"/>
+      </g>
+    );
+    // Smiling flower (sunflower with face)
+    case 20: return (
+      <g>
+        {[0,36,72,108,144,180,216,252,288,324].map(a => (
+          <ellipse key={a}
+            cx={+(Math.sin(a*Math.PI/180)*5.2).toFixed(2)} cy={+(-Math.cos(a*Math.PI/180)*5.2).toFixed(2)}
+            rx="1.8" ry="3.2" transform={`rotate(${a})`} fill={color}/>
+        ))}
+        <circle r="4" fill="rgba(255,235,100,0.97)"/>
+        <circle cx="-1.3" cy="-0.8" r="0.85" fill="rgba(50,30,10,0.7)"/>
+        <circle cx="1.3" cy="-0.8" r="0.85" fill="rgba(50,30,10,0.7)"/>
+        <path d="M-2,1.5 Q0,3.5 2,1.5" fill="none" stroke="rgba(50,30,10,0.7)" strokeWidth="0.9" strokeLinecap="round"/>
+      </g>
+    );
+    // Pencil
+    case 21: return (
+      <g transform="rotate(-35)">
+        <rect x="-1.8" y="-8.5" width="3.6" height="2" rx="0.7" fill="rgba(255,175,175,0.92)"/>
+        <rect x="-1.8" y="-7" width="3.6" height="10" rx="0.7" fill={color}/>
+        <line x1="-1.8" y1="-4.5" x2="1.8" y2="-4.5" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6"/>
+        <path d="M-1.8,3 L0,7.5 L1.8,3Z" fill="rgba(245,225,190,0.88)"/>
+        <path d="M-1,3.5 L0,6 L1,3.5Z" fill="rgba(180,130,70,0.75)"/>
+      </g>
+    );
+    // Apple
+    case 22: return (
+      <g>
+        <path d="M0.5,-8 C1.5,-10 4.5,-10 3.5,-7.5" fill="rgba(100,175,75,0.85)"/>
+        <line x1="0.2" y1="-6.5" x2="0.5" y2="-8" stroke="rgba(110,75,35,0.75)" strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M0,-6 C-7,-5.5 -8,0 -6.5,4 C-5.5,7 -3,8 0,7.5 C3,8 5.5,7 6.5,4 C8,0 7,-5.5 0,-6Z" fill={color}/>
+        <ellipse cx="-2.5" cy="-1.5" rx="1.3" ry="2" transform="rotate(-20)" fill="rgba(255,255,255,0.28)"/>
+      </g>
+    );
+    // Speech bubble with heart
+    case 23: return (
+      <g>
+        <path d="M-8,-7 L7,-7 Q9,-7 9,-5 L9,2 Q9,4 7,4 L1,4 L-0.5,8 L-2.5,4 L-8,4 Q-10,4 -10,2 L-10,-5 Q-10,-7 -8,-7Z"
+          fill={color} stroke={strokeColor} strokeWidth="0.4"/>
+        <path d="M0.5,0.5 C-2.5,-1 -4,-3.5 -2,-4.5 C-0.8,-5 0.5,-3.5 0.5,-2.5 C0.5,-3.5 1.8,-5 3,-4.5 C5,-3.5 3.5,-1 0.5,0.5Z"
+          fill="rgba(255,255,255,0.75)"/>
+      </g>
+    );
+    // Bunting / pennant flags
+    case 24: return (
+      <g>
+        <path d="M-10,-5 Q-5,-2.5 0,-4 Q5,-2.5 10,-5" fill="none" stroke={strokeColor} strokeWidth="0.9" strokeLinecap="round"/>
+        <polygon points="-9,-5 -5,-5 -7,0" fill="rgba(255,100,100,0.82)"/>
+        <polygon points="-2,-4.3 2,-4.3 0,0.5" fill="rgba(255,200,60,0.82)"/>
+        <polygon points="5,-5 9,-5 7,0" fill="rgba(90,180,255,0.82)"/>
+      </g>
+    );
+    // Smiley cloud
+    case 25: return (
+      <g>
+        <path d="M-7,3 C-9,1 -8,-3 -5.5,-3.5 C-5.5,-6 -2,-8 1,-6.5 C3,-8.5 7.5,-6.5 7,-3 C9,-2 8.5,3 6,3Z" fill={color}/>
+        <circle cx="-1.5" cy="0" r="1" fill="rgba(50,30,10,0.62)"/>
+        <circle cx="2.2" cy="0" r="1" fill="rgba(50,30,10,0.62)"/>
+        <path d="M-2.5,2 Q0.5,4.5 3.5,2" fill="none" stroke="rgba(50,30,10,0.62)" strokeWidth="1" strokeLinecap="round"/>
+      </g>
+    );
     // Daisy (simple 6-petal)
     default: return (
       <g>
@@ -341,12 +472,14 @@ function EditControls({
 
 // ── Polaroid card ─────────────────────────────────────────────────────────────
 function Polaroid({
-  photo, editMode, zIndex, onMove, onResize, onRotate, onTitleChange, onImageClick,
+  photo, editMode, zIndex, isSelected, onSelect, onMove, onResize, onRotate, onTitleChange, onImageClick,
   onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, isFormatSource, formatPainterActive,
 }: {
   photo: ScrapbookPhoto;
   editMode: boolean;
   zIndex: number;
+  isSelected: boolean;
+  onSelect: () => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, delta: number) => void;
   onRotate: (id: string, delta: number) => void;
@@ -386,7 +519,8 @@ function Polaroid({
       onClick={(e) => {
         e.stopPropagation();
         if (formatPainterActive && !isFormatSource) { onFormatPaste(); return; }
-        if (!editMode) onImageClick();
+        if (editMode) { onSelect(); return; }
+        onImageClick();
       }}
     >
       <TapeStrip color="rgba(255,226,128,0.62)" style={{ top: -9, left: 14, transform: 'rotate(-4deg)' }} />
@@ -398,8 +532,10 @@ function Polaroid({
         width: photo.width,
         boxShadow: formatPainterActive && !isFormatSource
           ? '0 0 0 2.5px rgba(200,140,60,0.9), 0 8px 30px rgba(0,0,0,0.18)'
+          : editMode && isSelected
+          ? '0 10px 32px rgba(232,160,180,0.7), 0 0 0 2px rgba(232,160,180,0.5), 0 4px 12px rgba(0,0,0,0.16)'
           : editMode
-          ? '0 10px 32px rgba(232,160,180,0.5), 0 4px 12px rgba(0,0,0,0.16)'
+          ? '0 4px 14px rgba(0,0,0,0.13)'
           : '0 8px 30px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.1)',
         transition: 'box-shadow 0.3s',
         position: 'relative',
@@ -442,7 +578,7 @@ function Polaroid({
         </div>
       </div>
 
-      {editMode && (
+      {editMode && isSelected && (
         <EditControls
           onResize={(d) => onResize(photo.id, d)}
           onRotate={(d) => onRotate(photo.id, d)}
@@ -457,8 +593,8 @@ function Polaroid({
         <div style={{
           position: 'absolute', top: -5, right: -5,
           width: 13, height: 13, borderRadius: '50%',
-          background: isFormatSource ? '#f0c030' : '#e8a0b4', border: '2px solid #fff',
-          zIndex: 3, pointerEvents: 'none',
+          background: isSelected ? (isFormatSource ? '#f0c030' : '#e8a0b4') : 'rgba(180,150,130,0.4)',
+          border: '2px solid #fff', zIndex: 3, pointerEvents: 'none',
         }} />
       )}
     </motion.div>
@@ -467,12 +603,14 @@ function Polaroid({
 
 // ── Text card ─────────────────────────────────────────────────────────────────
 function TextCard({
-  photo, editMode, zIndex, onMove, onResize, onRotate, onTextChange,
+  photo, editMode, zIndex, isSelected, onSelect, onMove, onResize, onRotate, onTextChange,
   onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, isFormatSource, formatPainterActive,
 }: {
   photo: ScrapbookPhoto;
   editMode: boolean;
   zIndex: number;
+  isSelected: boolean;
+  onSelect: () => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, delta: number) => void;
   onRotate: (id: string, delta: number) => void;
@@ -525,7 +663,8 @@ function TextCard({
       }}
       onClick={(e) => {
         e.stopPropagation();
-        if (formatPainterActive && !isFormatSource) onFormatPaste();
+        if (formatPainterActive && !isFormatSource) { onFormatPaste(); return; }
+        if (editMode) onSelect();
       }}
     >
       {/* Tape strip on text card */}
@@ -540,8 +679,10 @@ function TextCard({
         minHeight: 80,
         boxShadow: formatPainterActive && !isFormatSource
           ? '0 0 0 2.5px rgba(200,140,60,0.9), 0 6px 24px rgba(0,0,0,0.14)'
+          : editMode && isSelected
+          ? '0 8px 28px rgba(232,160,180,0.6), 0 0 0 2px rgba(232,160,180,0.4), 0 3px 10px rgba(0,0,0,0.12)'
           : editMode
-          ? '0 8px 28px rgba(232,160,180,0.45), 0 3px 10px rgba(0,0,0,0.12)'
+          ? '0 3px 10px rgba(0,0,0,0.1)'
           : '0 6px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)',
         transition: 'box-shadow 0.3s',
         position: 'relative',
@@ -588,7 +729,7 @@ function TextCard({
         )}
       </div>
 
-      {editMode && (
+      {editMode && isSelected && (
         <EditControls
           onResize={(d) => onResize(photo.id, d)}
           onRotate={(d) => onRotate(photo.id, d)}
@@ -627,11 +768,13 @@ function BgImageLayer({ src }: { src?: string }) {
 
 // ── Sticker item ──────────────────────────────────────────────────────────────
 function StickerItem({
-  sticker, editMode, idx, onMove, onResize, onRotate, onColor, onDelete,
+  sticker, editMode, idx, isSelected, onSelect, onMove, onResize, onRotate, onColor, onDelete,
 }: {
   sticker: ScrapbookSticker;
   editMode: boolean;
   idx: number;
+  isSelected: boolean;
+  onSelect: () => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, delta: number) => void;
   onRotate: (id: string, delta: number) => void;
@@ -669,19 +812,22 @@ function StickerItem({
         onMove(s.id, nx, ny);
         dragX.set(0); dragY.set(0);
       }}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => { e.stopPropagation(); if (editMode) onSelect(); }}
     >
       <svg
         viewBox="-12 -12 24 24"
         width={s.size} height={s.size}
-        style={{ display: 'block', overflow: 'visible' }}
+        style={{
+          display: 'block', overflow: 'visible',
+          filter: editMode && isSelected ? 'drop-shadow(0 0 6px rgba(232,160,180,0.7))' : 'none',
+        }}
       >
         <g>
           {renderDeco(s.type, s.color, stickerStroke(s.color))}
         </g>
       </svg>
 
-      {editMode && (
+      {editMode && isSelected && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}
           onClick={(e) => e.stopPropagation()}>
           <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
@@ -885,7 +1031,7 @@ function EditPanel({
           드래그해서 원하는 위치에 놓으세요
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {Array.from({ length: 14 }, (_, i) => (
+          {Array.from({ length: 26 }, (_, i) => (
             <button key={i}
               onPointerDown={(e) => { e.stopPropagation(); onStickerPointerDown(i, e); }}
               style={{
@@ -961,6 +1107,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
   const [formatPainter, setFormatPainter] = useState<{ id: string; width: number; rotate: number } | null>(null);
@@ -1012,6 +1159,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
 
   const handlePageClick = useCallback(() => {
     if (formatPainter) { setFormatPainter(null); return; }
+    if (editMode) { setSelectedId(null); return; }
     if (!bgmStarted.current && bgmSrc) {
       bgmStarted.current = true;
       bgmRef.current?.play().catch(() => {});
@@ -1186,9 +1334,10 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
   const onAddStickerAt = useCallback((type: number, xPct: number, yPct: number) => {
     const halfW = (32 / window.innerWidth) * 100;
     const halfH = (32 / window.innerHeight) * 100;
+    const newId = `stk_${Date.now()}`;
     updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : {
       ...pg, stickers: [...(pg.stickers ?? []), {
-        id: `stk_${Date.now()}`, type,
+        id: newId, type,
         x: Math.max(0, Math.min(90, xPct - halfW)),
         y: Math.max(0, Math.min(85, yPct - halfH)),
         rotate: (Math.random() - 0.5) * 20, size: 64,
@@ -1196,6 +1345,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
       }],
     }));
     setEditMode(true);
+    setSelectedId(newId);
   }, [seqIdx, updatePages]);
 
   // Keep ref always up-to-date to avoid stale closure in drag effect
@@ -1309,17 +1459,6 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
         }} />
       ))}
 
-      {/* Background note */}
-      {currentPage?.bgNote && (
-        <div style={{
-          position: 'absolute', bottom: '14%', right: '6%',
-          fontFamily: "'Dancing Script', cursive",
-          fontSize: 72, color: 'rgba(128,85,48,0.07)',
-          pointerEvents: 'none', userSelect: 'none', zIndex: 4,
-        }}>
-          {currentPage.bgNote}
-        </div>
-      )}
 
       {/* Photos & text cards */}
       <AnimatePresence>
@@ -1335,6 +1474,8 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             photo.src === '' ? (
               <TextCard
                 key={photo.id} photo={photo} editMode={editMode} zIndex={10 + idx}
+                isSelected={selectedId === photo.id}
+                onSelect={() => setSelectedId(photo.id)}
                 onMove={onMove} onResize={onResize} onRotate={onRotate} onTextChange={onTextChange}
                 onDuplicate={() => onDuplicate(photo.id)}
                 onFormatCopy={() => onFormatCopy(photo.id)}
@@ -1347,6 +1488,8 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             ) : (
               <Polaroid
                 key={photo.id} photo={photo} editMode={editMode} zIndex={10 + idx}
+                isSelected={selectedId === photo.id}
+                onSelect={() => setSelectedId(photo.id)}
                 onMove={onMove} onResize={onResize} onRotate={onRotate}
                 onTitleChange={onTitleChange}
                 onDuplicate={() => onDuplicate(photo.id)}
@@ -1378,6 +1521,8 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
           {currentPage?.stickers?.map((s, idx) => (
             <StickerItem
               key={s.id} sticker={s} editMode={editMode} idx={idx}
+              isSelected={selectedId === s.id}
+              onSelect={() => setSelectedId(s.id)}
               onMove={onStickerMove} onResize={onStickerResize} onRotate={onStickerRotate}
               onColor={onStickerColor} onDelete={onStickerDelete}
             />
@@ -1557,7 +1702,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             transition={{ delay: 1.2, duration: 0.6 }}
             onClick={(e) => { e.stopPropagation(); goToFirst?.(); }}
             style={{
-              position: 'fixed', bottom: 180, left: '50%', transform: 'translateX(-50%)',
+              position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)',
               zIndex: 160, background: 'rgba(232,160,180,0.18)',
               border: '1px solid rgba(232,160,180,0.45)', borderRadius: 28,
               color: 'rgba(255,220,230,0.85)', fontSize: 14,
@@ -1583,6 +1728,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             const entering = editMode === false;
             setEditMode(m => !m);
             if (entering) setAutoPlay?.(false);
+            else setSelectedId(null);
           }} title="편집 모드"
           style={{
             width: 44, height: 44, borderRadius: '50%', border: 'none',
@@ -1596,7 +1742,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.93 }}
-          onClick={() => setPanelOpen(o => !o)} title="편집 패널"
+          onClick={() => { setPanelOpen(o => !o); setAutoPlay?.(false); }} title="편집 패널"
           style={{
             width: 44, height: 44, borderRadius: '50%', border: 'none',
             background: panelOpen ? 'rgba(200,144,90,0.92)' : 'rgba(248,242,232,0.88)',
@@ -1609,7 +1755,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.93 }}
-          onClick={() => setBgmOpen(o => !o)} title="BGM"
+          onClick={() => { setBgmOpen(o => !o); setAutoPlay?.(false); }} title="BGM"
           style={{
             width: 44, height: 44, borderRadius: '50%', border: 'none',
             background: bgmOpen ? 'rgba(100,150,240,0.92)' : bgmSrc ? 'rgba(100,150,240,0.22)' : 'rgba(248,242,232,0.88)',

@@ -145,8 +145,9 @@ function AppInner() {
           style={{
             position: 'fixed', top: 28, left: 32, zIndex: 200,
             fontFamily: "'Courier New',monospace", fontSize: 11,
-            color: 'rgba(125,184,160,0.6)', letterSpacing: '2px',
-            pointerEvents: 'none',
+            color: canvasMode === 'journey' ? 'rgba(125,184,160,0.75)' : 'rgba(70,42,18,0.75)',
+            letterSpacing: '2px', pointerEvents: 'none',
+            textShadow: canvasMode !== 'journey' ? '0 1px 4px rgba(255,255,255,0.9)' : 'none',
           }}
         >
           {String(seqIdx + 1).padStart(2, '0')}&thinsp;/&thinsp;12
@@ -162,10 +163,11 @@ function AppInner() {
         <button
           onClick={() => setShowBar(p => !p)}
           style={{
-            background: 'rgba(12,8,4,0.55)', border: 'none', borderRadius: 12,
-            color: 'rgba(200,160,100,0.55)', fontSize: 9, cursor: 'pointer',
-            padding: '3px 12px', letterSpacing: '1px',
+            background: 'rgba(12,8,4,0.72)', border: '1px solid rgba(200,160,100,0.22)',
+            borderRadius: 16, color: 'rgba(200,160,100,0.85)', fontSize: 14, cursor: 'pointer',
+            padding: '5px 20px', letterSpacing: '1px',
             fontFamily: "'Courier New',monospace",
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           }}
         >
           {showBar ? '▾' : '▴'}
@@ -298,7 +300,7 @@ function AppInner() {
         {phase === 'select' && (
           <motion.div key="select" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }} style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-            <ModeSelectScreen onSelect={(mode) => { setCanvasMode(mode); setPhase('journey'); }} />
+            <ModeSelectScreen onSelect={(mode) => { setCanvasMode(mode); setPhase('journey'); goToSeq(0); }} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -84,8 +84,8 @@ const MODES = [
   {
     id: 'clothesline' as const,
     Icon: ClotheslineIcon,
-    title: '줄사진 모드',
-    sub: '빨래줄에 걸린\n12장의 사진처럼',
+    title: '폴라로이드 모드',
+    sub: '빨래줄에 걸린\n12장의 폴라로이드',
     accent: '#5dc9a5',
     glow: 'rgba(93,201,165,0.22)',
     border: 'rgba(93,201,165,0.35)',

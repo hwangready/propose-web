@@ -9,11 +9,29 @@ export interface ScrapbookPhoto {
   textContent?: string;  // text-only card content
 }
 
+export interface ScrapbookSticker {
+  id: string;
+  type: number;        // 0-13 (same as renderDeco types)
+  x: number;           // % of viewport left
+  y: number;           // % of viewport top
+  rotate: number;
+  size: number;        // px
+  color: string;       // CSS opaque color
+  strokeColor: string;
+}
+
 export interface ScrapbookPage {
   photos: ScrapbookPhoto[];
   subtitle: string;
   bgNote?: string;
-  bgImage?: string;      // full-screen background image
+  bgImage?: string;
+  subtitleBg?: string;         // CSS color for subtitle background
+  subtitleFontSize?: number;   // default 45
+  subtitleDesign?: string;     // 'pill' | 'flat' | 'outline' | 'shadow'
+  subtitleFont?: string;       // font family name
+  decoTheme?: string;          // kept for legacy
+  bgTheme?: string;            // key from BG_THEMES
+  stickers?: ScrapbookSticker[];
 }
 
 export const SCRAPBOOK_PAGES: ScrapbookPage[] = [

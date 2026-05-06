@@ -34,12 +34,13 @@ function AppInner() {
   const [phase, setPhase] = useState<Phase>(introConfig.enabled ? introConfig.introMode : 'journey');
   const [showIntroModal, setShowIntroModal] = useState(false);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('journey');
-  const { pos, go, goTo, canGo, next, nextSection, isLast, seqIdx, sectionStep } = useJourneyNav(phase === 'journey');
+  const { pos, go, goTo, goToSeq, canGo, next, nextSection, prevSection, isLast, seqIdx, sectionStep } = useJourneyNav(phase === 'journey' && canvasMode === 'journey');
   const [presentMode, setPresentMode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
   const [autoSec, setAutoSec] = useState(3);
   const [progress, setProgress] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showBar, setShowBar] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rafRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
@@ -60,6 +61,22 @@ function AppInner() {
     document.addEventListener('fullscreenchange', handler);
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
+
+  // Spacebar toggles play/pause; arrow keys navigate clothesline/scrapbook
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (phase !== 'journey') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); setAutoPlay(p => !p); }
+      if (canvasMode !== 'journey') {
+        if (e.key === 'ArrowRight') { e.preventDefault(); nextSection(); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); prevSection(); }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [phase, canvasMode, nextSection, prevSection]);
 
   useEffect(() => {
     if (phase !== 'journey' || !autoPlay || isLast) {
@@ -103,7 +120,7 @@ function AppInner() {
         ? <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
         : canvasMode === 'clothesline'
         ? <ClotheslineCanvas seqIdx={seqIdx} nextSection={nextSection} />
-        : <ScrapbookCanvas seqIdx={seqIdx} nextSection={nextSection} />
+        : <ScrapbookCanvas seqIdx={seqIdx} nextSection={nextSection} setAutoPlay={setAutoPlay} goToFirst={() => goToSeq(0)} />
       }
       {canvasMode === 'journey' && <NavigationMap pos={pos} goTo={goTo} />}
       {canvasMode === 'journey' && <DirectionArrows canGo={canGo} go={go} />}
@@ -117,7 +134,7 @@ function AppInner() {
         backgroundSize: '180px 180px',
       }} />
 
-      {/* 섹션 이름 — 상단 좌측 */}
+      {/* 페이지 번호 — 상단 좌측 */}
       <AnimatePresence mode="wait">
         <motion.div
           key={seqIdx}
@@ -132,75 +149,102 @@ function AppInner() {
             pointerEvents: 'none',
           }}
         >
-          {String(seqIdx + 1).padStart(2, '0')} — {SECTION_NAMES[seqIdx]}
+          {String(seqIdx + 1).padStart(2, '0')}&thinsp;/&thinsp;12
+          <span style={{ opacity: 0.6, marginLeft: 8 }}>{SECTION_NAMES[seqIdx]}</span>
         </motion.div>
       </AnimatePresence>
 
-      {/* 하단 중앙 재생/정지 + 속도 컨트롤 */}
+      {/* 하단 바 토글 버튼 (항상 표시) */}
       <div style={{
-        position: 'fixed', bottom: 22, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 200, display: 'flex', alignItems: 'center', gap: 8,
-        background: 'rgba(12,8,4,0.75)', backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(200,160,100,0.14)',
-        borderRadius: 40, padding: '7px 16px',
+        position: 'fixed', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 201, display: 'flex', justifyContent: 'center',
       }}>
-        {/* 카운터 */}
-        <span style={{
-          fontFamily: "'Courier New',monospace", fontSize: 10,
-          color: 'rgba(200,160,100,0.5)', letterSpacing: '2px', minWidth: 38,
-        }}>
-          {String(seqIdx + 1).padStart(2, '0')}&nbsp;/&nbsp;12
-        </span>
-
-        {/* 진행 바 */}
-        <div style={{ width: 60, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
-          <motion.div
-            animate={{ width: `${progress * 100}%` }}
-            transition={{ duration: 0.1 }}
-            style={{ height: '100%', background: 'rgba(200,144,90,0.7)', borderRadius: 1 }}
-          />
-        </div>
-
-        {/* 재생/정지 버튼 */}
         <button
-          onClick={() => setAutoPlay(p => !p)}
+          onClick={() => setShowBar(p => !p)}
           style={{
-            width: 28, height: 28, borderRadius: '50%', border: 'none',
-            background: autoPlay ? 'rgba(200,144,90,0.18)' : 'rgba(93,201,165,0.18)',
-            color: autoPlay ? '#c8905a' : '#5dc9a5',
-            cursor: 'pointer', fontSize: 11,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            outline: 'none',
+            background: 'rgba(12,8,4,0.55)', border: 'none', borderRadius: 12,
+            color: 'rgba(200,160,100,0.55)', fontSize: 9, cursor: 'pointer',
+            padding: '3px 12px', letterSpacing: '1px',
+            fontFamily: "'Courier New',monospace",
           }}
         >
-          {autoPlay ? '⏸' : '▶'}
+          {showBar ? '▾' : '▴'}
         </button>
+      </div>
 
-        {/* 구분선 */}
-        <div style={{ width: 1, height: 16, background: 'rgba(200,160,100,0.18)' }} />
-
-        {/* 속도 조절 */}
-        <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9, color: 'rgba(180,140,90,0.45)', letterSpacing: '1px' }}>
-          SPD
-        </span>
-        {[1, 3, 5, 8].map(s => (
-          <button
-            key={s}
-            onClick={() => setAutoSec(s)}
+      {/* 하단 중앙 재생/정지 + 속도 컨트롤 */}
+      <AnimatePresence>
+        {showBar && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ duration: 0.22 }}
             style={{
-              height: 22, minWidth: 26, paddingInline: 6,
-              borderRadius: 11, border: 'none',
-              background: autoSec === s ? 'rgba(200,144,90,0.38)' : 'transparent',
-              color: autoSec === s ? '#c8905a' : 'rgba(200,160,100,0.35)',
-              fontFamily: "'Courier New',monospace", fontSize: 10,
-              cursor: 'pointer', outline: 'none',
-              transition: 'background 0.2s, color 0.2s',
+              position: 'fixed', bottom: 22, left: 0, right: 0,
+              zIndex: 200, display: 'flex', justifyContent: 'center',
+              pointerEvents: 'none',
             }}
           >
-            {s}s
-          </button>
-        ))}
-      </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'rgba(12,8,4,0.75)', backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(200,160,100,0.14)',
+              borderRadius: 40, padding: '7px 16px',
+              pointerEvents: 'auto',
+            }}>
+              {/* 진행 바 */}
+              <div style={{ width: 60, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
+                <motion.div
+                  animate={{ width: `${progress * 100}%` }}
+                  transition={{ duration: 0.1 }}
+                  style={{ height: '100%', background: 'rgba(200,144,90,0.7)', borderRadius: 1 }}
+                />
+              </div>
+
+              {/* 재생/정지 버튼 */}
+              <button
+                onClick={() => setAutoPlay(p => !p)}
+                style={{
+                  width: 28, height: 28, borderRadius: '50%', border: 'none',
+                  background: autoPlay ? 'rgba(200,144,90,0.18)' : 'rgba(93,201,165,0.18)',
+                  color: autoPlay ? '#c8905a' : '#5dc9a5',
+                  cursor: 'pointer', fontSize: 11,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  outline: 'none',
+                }}
+              >
+                {autoPlay ? '⏸' : '▶'}
+              </button>
+
+              {/* 구분선 */}
+              <div style={{ width: 1, height: 16, background: 'rgba(200,160,100,0.18)' }} />
+
+              {/* 속도 조절 */}
+              <span style={{ fontFamily: "'Courier New',monospace", fontSize: 9, color: 'rgba(180,140,90,0.45)', letterSpacing: '1px' }}>
+                SPD
+              </span>
+              {[1, 3, 5, 8].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setAutoSec(s)}
+                  style={{
+                    height: 22, minWidth: 26, paddingInline: 6,
+                    borderRadius: 11, border: 'none',
+                    background: autoSec === s ? 'rgba(200,144,90,0.38)' : 'transparent',
+                    color: autoSec === s ? '#c8905a' : 'rgba(200,160,100,0.35)',
+                    fontFamily: "'Courier New',monospace", fontSize: 10,
+                    cursor: 'pointer', outline: 'none',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                >
+                  {s}s
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 통합 FAB 컨트롤 */}
       <ControlsFAB

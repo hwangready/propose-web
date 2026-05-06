@@ -13,9 +13,9 @@ export default function ImageViewer({ src, onClose, onReplace }: Props) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    onReplace(url);
-    onClose();
+    const reader = new FileReader();
+    reader.onload = () => { onReplace(reader.result as string); onClose(); };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -84,9 +84,6 @@ export default function ImageViewer({ src, onClose, onReplace }: Props) {
           >
             닫기
           </button>
-        </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', fontFamily: "'Courier New',monospace" }}>
-          사진을 교체하면 현재 세션에서만 유지됩니다
         </div>
       </motion.div>
 

@@ -83,7 +83,7 @@ export default function ControlsFAB({
                 }}
               >
                 <span>{canvasMode === 'journey' ? '📸' : canvasMode === 'clothesline' ? '📖' : '🗺'}</span>
-                <span>{canvasMode === 'journey' ? '줄사진 모드' : canvasMode === 'clothesline' ? '스크랩북 모드' : '여정 모드'}</span>
+                <span>{canvasMode === 'journey' ? '폴라로이드 모드' : canvasMode === 'clothesline' ? '스크랩북 모드' : '여정 모드'}</span>
               </motion.button>
 
               {/* 인트로 설정 */}

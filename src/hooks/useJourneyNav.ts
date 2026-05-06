@@ -90,22 +90,34 @@ export function useJourneyNav(enabled = true) {
     if (nextPos) setPos(nextPos);
   }, [seqIdx]);
 
+  const goToSeq = useCallback((idx: number) => {
+    const p = SEQUENCE[Math.max(0, Math.min(SEQUENCE.length - 1, idx))];
+    if (p) { setPos(p); setSectionStep(0); }
+  }, []);
+
+  const prevSection = useCallback(() => {
+    setSectionStep(0);
+    const prevPos = SEQUENCE[seqIdx - 1];
+    if (prevPos) setPos(prevPos);
+  }, [seqIdx]);
+
   const isLast = seqIdx === SEQUENCE.length - 1;
 
   useEffect(() => {
     if (!enabled) return;
     const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const map: Record<string, Dir> = {
         ArrowRight: 'right', ArrowLeft: 'left',
         ArrowDown: 'down', ArrowUp: 'up',
       };
       const dir = map[e.key];
       if (dir) { e.preventDefault(); go(dir); }
-      if (e.key === ' ') { e.preventDefault(); next(); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go, next, enabled]);
+  }, [go, enabled]);
 
-  return { pos, go, goTo, canGo, next, nextSection, isLast, seqIdx, sectionStep };
+  return { pos, go, goTo, goToSeq, canGo, next, nextSection, prevSection, isLast, seqIdx, sectionStep };
 }

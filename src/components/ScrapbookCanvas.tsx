@@ -473,7 +473,7 @@ function EditControls({
 // ── Polaroid card ─────────────────────────────────────────────────────────────
 function Polaroid({
   photo, editMode, zIndex, isSelected, onSelect, onMove, onResize, onRotate, onTitleChange, onImageClick,
-  onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, isFormatSource, formatPainterActive,
+  onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, onDelete, isFormatSource, formatPainterActive,
 }: {
   photo: ScrapbookPhoto;
   editMode: boolean;
@@ -490,12 +490,18 @@ function Polaroid({
   onFormatPaste: () => void;
   onBringForward: () => void;
   onSendBackward: () => void;
+  onDelete: () => void;
   isFormatSource: boolean;
   formatPainterActive: boolean;
 }) {
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
   const [editingTitle, setEditingTitle] = useState(false);
+  const idleOffset = useMemo(() => {
+    let h = 0;
+    for (let i = 0; i < photo.id.length; i++) h = (h * 31 + photo.id.charCodeAt(i)) & 0xffffff;
+    return (h % 1000) / 1000;
+  }, [photo.id]);
 
   return (
     <motion.div
@@ -508,7 +514,17 @@ function Polaroid({
         cursor: formatPainterActive && !isFormatSource ? 'crosshair' : editMode ? 'grab' : 'pointer',
         transformOrigin: 'center center',
       }}
-      animate={{ rotate: photo.rotate }}
+      animate={editMode
+        ? { rotate: photo.rotate, y: 0 }
+        : { y: [0, -(2 + idleOffset * 4), 0], rotate: [photo.rotate - 0.5, photo.rotate + 0.7, photo.rotate - 0.5] }
+      }
+      transition={editMode
+        ? { rotate: { duration: 0.2 }, y: { duration: 0.2 } }
+        : {
+            y: { duration: 2.2 + idleOffset * 1.8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: idleOffset * 1.5 },
+            rotate: { duration: 3 + idleOffset * 2, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: idleOffset },
+          }
+      }
       whileDrag={{ scale: 1.04, zIndex: 60, cursor: 'grabbing' }}
       onDragEnd={(_, info) => {
         const nx = Math.max(2, Math.min(72, photo.x + (info.offset.x / window.innerWidth) * 100));
@@ -516,10 +532,13 @@ function Polaroid({
         onMove(photo.id, nx, ny);
         dragX.set(0); dragY.set(0);
       }}
+      onPointerDown={(e) => {
+        if (editMode) { e.stopPropagation(); onSelect(); }
+      }}
       onClick={(e) => {
         e.stopPropagation();
         if (formatPainterActive && !isFormatSource) { onFormatPaste(); return; }
-        if (editMode) { onSelect(); return; }
+        if (editMode) return;
         onImageClick();
       }}
     >
@@ -589,6 +608,19 @@ function Polaroid({
           isFormatSource={isFormatSource}
         />
       )}
+      {editMode && isSelected && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          style={{
+            position: 'absolute', top: -10, left: -10,
+            width: 24, height: 24, borderRadius: '50%',
+            background: 'rgba(220,60,60,0.9)', color: '#fff',
+            border: '2px solid #fff', fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
+          }}
+        >×</button>
+      )}
       {editMode && (
         <div style={{
           position: 'absolute', top: -5, right: -5,
@@ -604,7 +636,7 @@ function Polaroid({
 // ── Text card ─────────────────────────────────────────────────────────────────
 function TextCard({
   photo, editMode, zIndex, isSelected, onSelect, onMove, onResize, onRotate, onTextChange,
-  onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, isFormatSource, formatPainterActive,
+  onDuplicate, onFormatCopy, onFormatPaste, onBringForward, onSendBackward, onDelete, isFormatSource, formatPainterActive,
 }: {
   photo: ScrapbookPhoto;
   editMode: boolean;
@@ -620,6 +652,7 @@ function TextCard({
   onFormatPaste: () => void;
   onBringForward: () => void;
   onSendBackward: () => void;
+  onDelete: () => void;
   isFormatSource: boolean;
   formatPainterActive: boolean;
 }) {
@@ -628,6 +661,11 @@ function TextCard({
   const [editingText, setEditingText] = useState(false);
   const [visibleChars, setVisibleChars] = useState(0);
   const text = photo.textContent || '';
+  const idleOffset = useMemo(() => {
+    let h = 0;
+    for (let i = 0; i < photo.id.length; i++) h = (h * 31 + photo.id.charCodeAt(i)) & 0xffffff;
+    return (h % 1000) / 1000;
+  }, [photo.id]);
 
   useEffect(() => {
     if (editMode) { setVisibleChars(text.length); return; }
@@ -653,7 +691,17 @@ function TextCard({
         cursor: formatPainterActive && !isFormatSource ? 'crosshair' : editMode ? 'grab' : 'default',
         transformOrigin: 'center center',
       }}
-      animate={{ rotate: photo.rotate }}
+      animate={editMode
+        ? { rotate: photo.rotate, y: 0 }
+        : { y: [0, -(1.5 + idleOffset * 3), 0], rotate: [photo.rotate - 0.4, photo.rotate + 0.5, photo.rotate - 0.4] }
+      }
+      transition={editMode
+        ? { rotate: { duration: 0.2 }, y: { duration: 0.2 } }
+        : {
+            y: { duration: 2.5 + idleOffset * 1.5, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: idleOffset * 1.2 },
+            rotate: { duration: 3.5 + idleOffset * 1.8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: idleOffset * 0.9 },
+          }
+      }
       whileDrag={{ scale: 1.03, zIndex: 60, cursor: 'grabbing' }}
       onDragEnd={(_, info) => {
         const nx = Math.max(2, Math.min(72, photo.x + (info.offset.x / window.innerWidth) * 100));
@@ -661,10 +709,12 @@ function TextCard({
         onMove(photo.id, nx, ny);
         dragX.set(0); dragY.set(0);
       }}
+      onPointerDown={(e) => {
+        if (editMode) { e.stopPropagation(); onSelect(); }
+      }}
       onClick={(e) => {
         e.stopPropagation();
         if (formatPainterActive && !isFormatSource) { onFormatPaste(); return; }
-        if (editMode) onSelect();
       }}
     >
       {/* Tape strip on text card */}
@@ -739,6 +789,19 @@ function TextCard({
           onSendBackward={onSendBackward}
           isFormatSource={isFormatSource}
         />
+      )}
+      {editMode && isSelected && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          style={{
+            position: 'absolute', top: -10, left: -10,
+            width: 24, height: 24, borderRadius: '50%',
+            background: 'rgba(220,60,60,0.9)', color: '#fff',
+            border: '2px solid #fff', fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
+          }}
+        >×</button>
       )}
     </motion.div>
   );
@@ -857,12 +920,14 @@ function StickerItem({
 
 // ── Upload / edit panel ───────────────────────────────────────────────────────
 function EditPanel({
-  seqIdx, onClose, onUpload, onAddText, onSetBgImage, bgTheme, onBgThemeChange,
+  seqIdx, onClose, onAddText, onSetBgImage, bgTheme, onBgThemeChange,
   globalDecoTheme, onGlobalDecoThemeChange, onStickerPointerDown,
+  photoLibrary, selectedLibraryIds, onLibraryAdd, onLibraryDelete, onLibraryToggle,
+  onLibraryPlace, onLibrarySelectAllToggle,
+  pendingStickerTypes, onStickerTypeToggle, onStickerTypeSelectAll, onPlaceStickers,
 }: {
   seqIdx: number;
   onClose: () => void;
-  onUpload: (files: File[]) => void;
   onAddText: () => void;
   onSetBgImage: (file: File) => void;
   bgTheme: string;
@@ -870,17 +935,20 @@ function EditPanel({
   globalDecoTheme: string;
   onGlobalDecoThemeChange: (key: string) => void;
   onStickerPointerDown: (type: number, e: React.PointerEvent) => void;
+  photoLibrary: Array<{id: string; src: string; name: string}>;
+  selectedLibraryIds: Set<string>;
+  onLibraryAdd: (files: File[]) => void;
+  onLibraryDelete: (id: string) => void;
+  onLibraryToggle: (id: string) => void;
+  onLibraryPlace: () => void;
+  onLibrarySelectAllToggle: () => void;
+  pendingStickerTypes: Set<number>;
+  onStickerTypeToggle: (type: number) => void;
+  onStickerTypeSelectAll: () => void;
+  onPlaceStickers: () => void;
 }) {
   const photoRef = useRef<HTMLInputElement>(null);
   const bgRef = useRef<HTMLInputElement>(null);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [pending, setPending] = useState<File[]>([]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setPending(files);
-    setPreviews(files.map(f => URL.createObjectURL(f)));
-  };
 
   const sectionLabel: React.CSSProperties = {
     fontFamily: "'Noto Sans KR', sans-serif",
@@ -927,47 +995,91 @@ function EditPanel({
         페이지 {seqIdx + 1} / 12
       </div>
 
-      {/* 사진 추가 */}
+      {/* 사진 라이브러리 */}
       <div>
-        <div style={sectionLabel}>📷 사진 추가</div>
+        <div style={sectionLabel}>📷 사진 라이브러리</div>
         <div
           onClick={() => photoRef.current?.click()}
           style={{
             border: '2px dashed rgba(200,144,90,0.38)', borderRadius: 12,
-            padding: '20px', textAlign: 'center', cursor: 'pointer',
+            padding: '14px', textAlign: 'center', cursor: 'pointer',
             color: 'rgba(110,72,44,0.55)', fontSize: 13,
             fontFamily: "'Noto Sans KR', sans-serif",
             background: 'rgba(255,252,242,0.8)',
           }}
         >
-          클릭하여 사진 선택
-          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.55 }}>여러 장 동시 선택 가능</div>
+          + 사진 추가
+          <div style={{ fontSize: 10, marginTop: 2, opacity: 0.55 }}>라이브러리에 저장됩니다</div>
         </div>
-        <input ref={photoRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleChange} />
+        <input ref={photoRef} type="file" multiple accept="image/*" style={{ display: 'none' }}
+          onChange={(e) => {
+            const files = Array.from(e.target.files || []);
+            if (files.length) { onLibraryAdd(files); e.target.value = ''; }
+          }} />
 
-        {previews.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {previews.map((p, i) => (
-              <img key={i} src={p} style={{ width: 68, height: 68, objectFit: 'cover', borderRadius: 8, border: '2px solid rgba(200,144,90,0.28)' }} />
-            ))}
-          </div>
-        )}
-        {pending.length > 0 && (
-          <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => { onUpload(pending); setPending([]); setPreviews([]); onClose(); }}
-            style={{
-              marginTop: 10, width: '100%',
-              background: 'linear-gradient(135deg, #e8a0b4, #c8905a)',
-              border: 'none', borderRadius: 20,
-              color: '#fff', fontSize: 13,
-              fontFamily: "'Noto Sans KR', sans-serif",
-              padding: '10px', cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(232,160,180,0.35)',
-            }}
-          >
-            자동 배치 ({pending.length}장)
-          </motion.button>
+        {photoLibrary.length > 0 && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: 'rgba(100,65,40,0.5)', fontFamily: "'Noto Sans KR', sans-serif" }}>
+                {selectedLibraryIds.size > 0 ? `${selectedLibraryIds.size}장 선택` : `${photoLibrary.length}장`}
+              </span>
+              <button onClick={onLibrarySelectAllToggle}
+                style={{
+                  fontSize: 10, padding: '3px 10px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: 'rgba(200,144,90,0.18)', color: '#6a4022',
+                  fontFamily: "'Noto Sans KR', sans-serif",
+                }}>
+                {selectedLibraryIds.size === photoLibrary.length ? '전체 해제' : '전체 선택'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {photoLibrary.map(p => (
+                <div key={p.id} style={{ position: 'relative', cursor: 'pointer' }}
+                  onClick={() => onLibraryToggle(p.id)}>
+                  <img src={p.src} style={{
+                    width: 68, height: 68, objectFit: 'cover', borderRadius: 8,
+                    border: selectedLibraryIds.has(p.id) ? '2.5px solid rgba(232,160,180,0.9)' : '2px solid rgba(200,144,90,0.28)',
+                    opacity: selectedLibraryIds.has(p.id) ? 1 : 0.72,
+                    transition: 'all 0.18s',
+                  }} />
+                  {selectedLibraryIds.has(p.id) && (
+                    <div style={{
+                      position: 'absolute', bottom: 3, right: 3,
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: 'rgba(232,160,180,0.95)', color: '#fff',
+                      fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>✓</div>
+                  )}
+                  <button onClick={(e) => { e.stopPropagation(); onLibraryDelete(p.id); }}
+                    style={{
+                      position: 'absolute', top: 2, right: 2,
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: 'rgba(200,60,60,0.82)', color: '#fff',
+                      border: 'none', fontSize: 12, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      lineHeight: 1,
+                    }}>×</button>
+                </div>
+              ))}
+            </div>
+            {selectedLibraryIds.size > 0 && (
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => { onLibraryPlace(); onClose(); }}
+                style={{
+                  marginTop: 10, width: '100%',
+                  background: 'linear-gradient(135deg, #e8a0b4, #c8905a)',
+                  border: 'none', borderRadius: 20,
+                  color: '#fff', fontSize: 13,
+                  fontFamily: "'Noto Sans KR', sans-serif",
+                  padding: '10px', cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(232,160,180,0.35)',
+                }}
+              >
+                보드에 배치 ({selectedLibraryIds.size}장)
+              </motion.button>
+            )}
+          </>
         )}
       </div>
 
@@ -1062,26 +1174,68 @@ function EditPanel({
       {/* 스티커 / 꾸밈요소 추가 */}
       <div>
         <div style={sectionLabel}>🎀 스티커 · 꾸밈요소</div>
-        <div style={{ fontSize: 10, color: 'rgba(100,65,40,0.45)', fontFamily: "'Noto Sans KR',sans-serif", marginBottom: 8 }}>
-          드래그해서 원하는 위치에 놓으세요
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <span style={{ fontSize: 10, color: 'rgba(100,65,40,0.45)', fontFamily: "'Noto Sans KR',sans-serif" }}>
+            {pendingStickerTypes.size > 0
+              ? `${pendingStickerTypes.size}개 선택 → 배치 버튼 or 드래그`
+              : '클릭 선택 후 배치 · 드래그로 바로 배치'}
+          </span>
+          <button onClick={onStickerTypeSelectAll}
+            style={{
+              fontSize: 9, padding: '2px 8px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: 'rgba(200,144,90,0.18)', color: '#6a4022',
+              fontFamily: "'Noto Sans KR', sans-serif",
+            }}>
+            {pendingStickerTypes.size === 26 ? '해제' : '전체'}
+          </button>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {Array.from({ length: 26 }, (_, i) => (
-            <button key={i}
-              onPointerDown={(e) => { e.stopPropagation(); onStickerPointerDown(i, e); }}
-              style={{
-                width: 38, height: 38, borderRadius: 8, cursor: 'grab',
-                background: 'rgba(255,248,235,0.9)',
-                border: '1px solid rgba(200,144,90,0.28)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 0, touchAction: 'none',
-              }}>
-              <svg viewBox="-12 -12 24 24" width={24} height={24} style={{ overflow: 'visible', pointerEvents: 'none' }}>
-                {renderDeco(i, '#ffb0c8', '#e890a8')}
-              </svg>
-            </button>
+            <div key={i} style={{ position: 'relative' }}>
+              <button
+                onClick={() => onStickerTypeToggle(i)}
+                onPointerDown={(e) => { e.stopPropagation(); if (!pendingStickerTypes.size) onStickerPointerDown(i, e); }}
+                style={{
+                  width: 38, height: 38, borderRadius: 8, cursor: pendingStickerTypes.size ? 'pointer' : 'grab',
+                  background: pendingStickerTypes.has(i) ? 'rgba(232,160,180,0.28)' : 'rgba(255,248,235,0.9)',
+                  border: pendingStickerTypes.has(i) ? '2px solid rgba(232,160,180,0.7)' : '1px solid rgba(200,144,90,0.28)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 0, touchAction: 'none',
+                  transition: 'all 0.15s',
+                }}>
+                <svg viewBox="-12 -12 24 24" width={24} height={24} style={{ overflow: 'visible', pointerEvents: 'none' }}>
+                  {renderDeco(i, pendingStickerTypes.has(i) ? '#e870a0' : '#ffb0c8', pendingStickerTypes.has(i) ? '#c85080' : '#e890a8')}
+                </svg>
+              </button>
+              {pendingStickerTypes.has(i) && (
+                <div style={{
+                  position: 'absolute', bottom: 1, right: 1,
+                  width: 13, height: 13, borderRadius: '50%',
+                  background: 'rgba(232,160,180,0.92)', color: '#fff',
+                  fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}>✓</div>
+              )}
+            </div>
           ))}
         </div>
+        {pendingStickerTypes.size > 0 && (
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => { onPlaceStickers(); onClose(); }}
+            style={{
+              marginTop: 10, width: '100%',
+              background: 'linear-gradient(135deg, rgba(232,160,180,0.9), rgba(200,144,90,0.9))',
+              border: 'none', borderRadius: 20,
+              color: '#fff', fontSize: 13,
+              fontFamily: "'Noto Sans KR', sans-serif",
+              padding: '10px', cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(232,160,180,0.35)',
+            }}
+          >
+            스티커 배치 ({pendingStickerTypes.size}개)
+          </motion.button>
+        )}
       </div>
 
       {/* 도움말 */}
@@ -1145,6 +1299,9 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [globalDecoTheme, setGlobalDecoTheme] = useState<string>(() => localStorage.getItem('scrapbook_deco_theme') ?? 'off');
   const [panelOpen, setPanelOpen] = useState(false);
+  const [photoLibrary, setPhotoLibrary] = useState<Array<{id: string; src: string; name: string}>>([]);
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
+  const [pendingStickerTypes, setPendingStickerTypes] = useState<Set<number>>(new Set());
   const [editingSubtitle, setEditingSubtitle] = useState(false);
   const [formatPainter, setFormatPainter] = useState<{ id: string; width: number; rotate: number } | null>(null);
   const [dragCursorPos, setDragCursorPos] = useState<{ x: number; y: number } | null>(null);
@@ -1333,21 +1490,98 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
     setFormatPainter(null);
   }, [seqIdx, formatPainter, updatePages]);
 
-  // Upload photos — converted to base64 for persistence across sessions
-  const onUpload = useCallback((files: File[]) => {
-    const pos = autoArrange(files.length);
-    Promise.all(files.map(f => new Promise<string>((res, rej) => {
-      const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = rej; r.readAsDataURL(f);
-    }))).then(srcs => {
-      updatePages(prev => {
-        const existing = prev[seqIdx]?.photos ?? [];
-        const newPhotos: ScrapbookPhoto[] = srcs.map((src, i) => ({
-          id: `up_${Date.now()}_${i}`, src, title: '', width: 290, ...pos[i],
-        }));
-        return prev.map((pg, pi) => pi !== seqIdx ? pg : { ...pg, photos: [...existing, ...newPhotos] });
-      });
+  // Photo library
+  const onLibraryAdd = useCallback((files: File[]) => {
+    Promise.all(files.map(f => new Promise<{id:string;src:string;name:string}>((res, rej) => {
+      const r = new FileReader();
+      const uid = `lib_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      r.onload = () => res({ id: uid, src: r.result as string, name: f.name });
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    }))).then(items => setPhotoLibrary(prev => [...prev, ...items]));
+  }, []);
+
+  const onLibraryDelete = useCallback((id: string) => {
+    setPhotoLibrary(prev => prev.filter(p => p.id !== id));
+    setSelectedLibraryIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+  }, []);
+
+  const onLibraryToggle = useCallback((id: string) => {
+    setSelectedLibraryIds(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id); else s.add(id);
+      return s;
     });
+  }, []);
+
+  const onLibrarySelectAllToggle = useCallback(() => {
+    setSelectedLibraryIds(prev =>
+      prev.size === photoLibrary.length ? new Set() : new Set(photoLibrary.map(p => p.id))
+    );
+  }, [photoLibrary]);
+
+  const onLibraryPlace = useCallback(() => {
+    const selected = photoLibrary.filter(p => selectedLibraryIds.has(p.id));
+    if (!selected.length) return;
+    const positions = autoArrange(selected.length);
+    updatePages(prev => {
+      const existing = prev[seqIdx]?.photos ?? [];
+      const newPhotos: ScrapbookPhoto[] = selected.map((p, i) => ({
+        id: `up_${Date.now()}_${i}`, src: p.src, title: '',
+        x: positions[i].x, y: positions[i].y, rotate: positions[i].rotate, width: 280,
+      }));
+      return prev.map((pg, pi) => pi !== seqIdx ? pg : { ...pg, photos: [...existing, ...newPhotos] });
+    });
+    setSelectedLibraryIds(new Set());
+    setEditMode(true);
+  }, [photoLibrary, selectedLibraryIds, seqIdx, updatePages]);
+
+  // Delete photo/textcard from board
+  const onPhotoDelete = useCallback((id: string) => {
+    updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : {
+      ...pg, photos: pg.photos.filter(p => p.id !== id),
+    }));
+    setSelectedId(null);
   }, [seqIdx, updatePages]);
+
+  // Sticker multi-select
+  const onStickerTypeToggle = useCallback((type: number) => {
+    setPendingStickerTypes(prev => {
+      const s = new Set(prev);
+      if (s.has(type)) s.delete(type); else s.add(type);
+      return s;
+    });
+  }, []);
+
+  const onStickerTypeSelectAll = useCallback(() => {
+    setPendingStickerTypes(prev =>
+      prev.size === 26 ? new Set() : new Set(Array.from({ length: 26 }, (_, i) => i))
+    );
+  }, []);
+
+  const onPlaceStickers = useCallback(() => {
+    if (!pendingStickerTypes.size) return;
+    const types = Array.from(pendingStickerTypes);
+    updatePages(prev => prev.map((pg, pi) => {
+      if (pi !== seqIdx) return pg;
+      const newStickers = types.map(type => {
+        const color = STICKER_COLORS[Math.floor(Math.random() * STICKER_COLORS.length)];
+        return {
+          id: `stk_${Date.now()}_${type}_${Math.random().toString(36).slice(2)}`,
+          type,
+          x: 20 + Math.random() * 55,
+          y: 15 + Math.random() * 55,
+          rotate: (Math.random() - 0.5) * 30,
+          size: 56 + Math.floor(Math.random() * 24),
+          color,
+          strokeColor: stickerStroke(color),
+        };
+      });
+      return { ...pg, stickers: [...(pg.stickers ?? []), ...newStickers] };
+    }));
+    setPendingStickerTypes(new Set());
+    setEditMode(true);
+  }, [pendingStickerTypes, seqIdx, updatePages]);
 
   // Add text card
   const onAddText = useCallback(() => {
@@ -1528,6 +1762,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
                 onFormatPaste={() => onFormatPaste(photo.id)}
                 onBringForward={() => onBringForward(photo.id)}
                 onSendBackward={() => onSendBackward(photo.id)}
+                onDelete={() => onPhotoDelete(photo.id)}
                 isFormatSource={formatPainter?.id === photo.id}
                 formatPainterActive={!!formatPainter}
               />
@@ -1543,6 +1778,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
                 onFormatPaste={() => onFormatPaste(photo.id)}
                 onBringForward={() => onBringForward(photo.id)}
                 onSendBackward={() => onSendBackward(photo.id)}
+                onDelete={() => onPhotoDelete(photo.id)}
                 isFormatSource={formatPainter?.id === photo.id}
                 formatPainterActive={!!formatPainter}
                 onImageClick={() => openViewer(photo.src, (newSrc) => {
@@ -1917,7 +2153,6 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
           <EditPanel
             seqIdx={seqIdx}
             onClose={() => setPanelOpen(false)}
-            onUpload={onUpload}
             onAddText={onAddText}
             onSetBgImage={onSetBgImage}
             bgTheme={currentPage?.bgTheme ?? 'cream'}
@@ -1925,6 +2160,17 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             globalDecoTheme={globalDecoTheme}
             onGlobalDecoThemeChange={onGlobalDecoThemeChange}
             onStickerPointerDown={handleStickerPointerDown}
+            photoLibrary={photoLibrary}
+            selectedLibraryIds={selectedLibraryIds}
+            onLibraryAdd={onLibraryAdd}
+            onLibraryDelete={onLibraryDelete}
+            onLibraryToggle={onLibraryToggle}
+            onLibraryPlace={onLibraryPlace}
+            onLibrarySelectAllToggle={onLibrarySelectAllToggle}
+            pendingStickerTypes={pendingStickerTypes}
+            onStickerTypeToggle={onStickerTypeToggle}
+            onStickerTypeSelectAll={onStickerTypeSelectAll}
+            onPlaceStickers={onPlaceStickers}
           />
         )}
       </AnimatePresence>

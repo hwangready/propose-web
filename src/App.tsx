@@ -38,6 +38,11 @@ function AppInner() {
   const [presentMode, setPresentMode] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
   const [autoSec, setAutoSec] = useState(3);
+  const [scrapSlideIdx, setScrapSlideIdx] = useState(0);
+  const [scrapPageCount, setScrapPageCount] = useState(12);
+  const effectiveIsLast = canvasMode === 'scrapbook'
+    ? scrapSlideIdx >= scrapPageCount - 1
+    : isLast;
   const [progress, setProgress] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBar, setShowBar] = useState(true);
@@ -69,17 +74,20 @@ function AppInner() {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.code === 'Space') { e.preventDefault(); setAutoPlay(p => !p); }
-      if (canvasMode !== 'journey') {
+      if (canvasMode === 'scrapbook') {
+        if (e.key === 'ArrowRight') { e.preventDefault(); setScrapSlideIdx(i => Math.min(i + 1, scrapPageCount - 1)); }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); setScrapSlideIdx(i => Math.max(0, i - 1)); }
+      } else if (canvasMode !== 'journey') {
         if (e.key === 'ArrowRight') { e.preventDefault(); nextSection(); }
         if (e.key === 'ArrowLeft')  { e.preventDefault(); prevSection(); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [phase, canvasMode, nextSection, prevSection]);
+  }, [phase, canvasMode, nextSection, prevSection, scrapPageCount]);
 
   useEffect(() => {
-    if (phase !== 'journey' || !autoPlay || isLast) {
+    if (phase !== 'journey' || !autoPlay || effectiveIsLast) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (!autoPlay) setProgress(0);
       return;
@@ -101,8 +109,13 @@ function AppInner() {
     rafRef.current = requestAnimationFrame(tick);
 
     intervalRef.current = setInterval(() => {
-      if (canvasMode !== 'journey') nextSection();
-      else next();
+      if (canvasMode === 'scrapbook') {
+        setScrapSlideIdx(i => Math.min(i + 1, scrapPageCount - 1));
+      } else if (canvasMode !== 'journey') {
+        nextSection();
+      } else {
+        next();
+      }
       startTimeRef.current = performance.now();
       setProgress(0);
     }, effectiveSec * 1000);
@@ -111,7 +124,7 @@ function AppInner() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [autoPlay, autoSec, pos, isLast, next, nextSection, phase, canvasMode]);
+  }, [autoPlay, autoSec, pos, effectiveIsLast, next, nextSection, phase, canvasMode, scrapPageCount]);
 
   return (
     <>
@@ -120,7 +133,17 @@ function AppInner() {
         ? <JourneyCanvas pos={pos} go={go} canGo={canGo} next={next} sectionStep={sectionStep} />
         : canvasMode === 'clothesline'
         ? <ClotheslineCanvas seqIdx={seqIdx} nextSection={nextSection} />
-        : <ScrapbookCanvas seqIdx={seqIdx} nextSection={nextSection} setAutoPlay={setAutoPlay} goToFirst={() => goToSeq(0)} />
+        : <ScrapbookCanvas
+            seqIdx={scrapSlideIdx}
+            nextSection={() => setScrapSlideIdx(i => Math.min(i + 1, scrapPageCount - 1))}
+            setAutoPlay={setAutoPlay}
+            goToFirst={() => setScrapSlideIdx(0)}
+            onPageCountChange={(count) => {
+              setScrapPageCount(count);
+              setScrapSlideIdx(i => Math.min(i, count - 1));
+            }}
+            onSlideIdxChange={setScrapSlideIdx}
+          />
       }
       {canvasMode === 'journey' && <NavigationMap pos={pos} goTo={goTo} />}
       {canvasMode === 'journey' && <DirectionArrows canGo={canGo} go={go} />}
@@ -135,25 +158,32 @@ function AppInner() {
       }} />
 
       {/* 페이지 번호 — 상단 좌측 */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={seqIdx}
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          transition={{ duration: 0.4 }}
-          style={{
-            position: 'fixed', top: 28, left: 32, zIndex: 200,
-            fontFamily: "'Courier New',monospace", fontSize: 11,
-            color: canvasMode === 'journey' ? 'rgba(125,184,160,0.75)' : 'rgba(70,42,18,0.75)',
-            letterSpacing: '2px', pointerEvents: 'none',
-            textShadow: canvasMode !== 'journey' ? '0 1px 4px rgba(255,255,255,0.9)' : 'none',
-          }}
-        >
-          {String(seqIdx + 1).padStart(2, '0')}&thinsp;/&thinsp;12
-          <span style={{ opacity: 0.6, marginLeft: 8 }}>{SECTION_NAMES[seqIdx]}</span>
-        </motion.div>
-      </AnimatePresence>
+      {(() => {
+        const dispIdx   = canvasMode === 'scrapbook' ? scrapSlideIdx  : seqIdx;
+        const dispTotal = canvasMode === 'scrapbook' ? scrapPageCount : 12;
+        const dispName  = canvasMode === 'scrapbook' ? ''             : SECTION_NAMES[seqIdx];
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={dispIdx}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.4 }}
+              style={{
+                position: 'fixed', top: 28, left: 32, zIndex: 200,
+                fontFamily: "'Courier New',monospace", fontSize: 11,
+                color: canvasMode === 'journey' ? 'rgba(125,184,160,0.75)' : 'rgba(70,42,18,0.75)',
+                letterSpacing: '2px', pointerEvents: 'none',
+                textShadow: canvasMode !== 'journey' ? '0 1px 4px rgba(255,255,255,0.9)' : 'none',
+              }}
+            >
+              {String(dispIdx + 1).padStart(2, '0')}&thinsp;/&thinsp;{String(dispTotal).padStart(2, '0')}
+              {dispName && <span style={{ opacity: 0.6, marginLeft: 8 }}>{dispName}</span>}
+            </motion.div>
+          </AnimatePresence>
+        );
+      })()}
 
       {/* 하단 바 토글 버튼 (항상 표시) */}
       <div style={{
@@ -259,7 +289,7 @@ function AppInner() {
         onPresentMode={() => setPresentMode(true)}
         onIntroConfig={() => setShowIntroModal(true)}
         progress={progress}
-        isLast={isLast}
+        isLast={effectiveIsLast}
         canvasMode={canvasMode}
         onModeToggle={() => setCanvasMode(m => m === 'journey' ? 'clothesline' : m === 'clothesline' ? 'scrapbook' : 'journey')}
       />
@@ -300,7 +330,7 @@ function AppInner() {
         {phase === 'select' && (
           <motion.div key="select" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }} style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-            <ModeSelectScreen onSelect={(mode) => { setCanvasMode(mode); setPhase('journey'); goToSeq(0); }} />
+            <ModeSelectScreen onSelect={(mode) => { setCanvasMode(mode); setPhase('journey'); goToSeq(0); setScrapSlideIdx(0); }} />
           </motion.div>
         )}
       </AnimatePresence>

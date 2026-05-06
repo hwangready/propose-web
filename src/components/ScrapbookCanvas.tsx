@@ -9,6 +9,8 @@ interface Props {
   nextSection: () => void;
   setAutoPlay?: React.Dispatch<React.SetStateAction<boolean>>;
   goToFirst?: () => void;
+  onPageCountChange?: (count: number) => void;
+  onSlideIdxChange?: (idx: number) => void;
 }
 
 const GRAIN_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
@@ -924,7 +926,8 @@ function EditPanel({
   globalDecoTheme, onGlobalDecoThemeChange, onStickerPointerDown,
   photoLibrary, selectedLibraryIds, onLibraryAdd, onLibraryDelete, onLibraryToggle,
   onLibraryPlace, onLibrarySelectAllToggle,
-  pendingStickerTypes, onStickerTypeToggle, onStickerTypeSelectAll, onPlaceStickers,
+  pendingStickerTypes, onStickerTypeToggle, onStickerTypeSelectAll, onPlaceStickers, onStickerReshuffle,
+  allPages, currentPageIdx, onPageAdd, onPageDelete, onPageMoveUp, onPageMoveDown, onPageGoTo,
 }: {
   seqIdx: number;
   onClose: () => void;
@@ -946,6 +949,14 @@ function EditPanel({
   onStickerTypeToggle: (type: number) => void;
   onStickerTypeSelectAll: () => void;
   onPlaceStickers: () => void;
+  onStickerReshuffle: () => void;
+  allPages: ScrapbookPage[];
+  currentPageIdx: number;
+  onPageAdd: () => void;
+  onPageDelete: (idx: number) => void;
+  onPageMoveUp: (idx: number) => void;
+  onPageMoveDown: (idx: number) => void;
+  onPageGoTo: (idx: number) => void;
 }) {
   const photoRef = useRef<HTMLInputElement>(null);
   const bgRef = useRef<HTMLInputElement>(null);
@@ -1236,6 +1247,76 @@ function EditPanel({
             스티커 배치 ({pendingStickerTypes.size}개)
           </motion.button>
         )}
+        <motion.button
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          onClick={onStickerReshuffle}
+          style={{
+            marginTop: 8, width: '100%',
+            background: 'rgba(255,248,235,0.9)',
+            border: '1px solid rgba(200,144,90,0.35)',
+            borderRadius: 20, color: '#6a4022', fontSize: 12,
+            fontFamily: "'Noto Sans KR', sans-serif",
+            padding: '8px', cursor: 'pointer',
+          }}
+        >
+          🔀 현재 스티커 위치·크기·색상 랜덤 재배치
+        </motion.button>
+      </div>
+
+      {/* 슬라이드 관리 */}
+      <div>
+        <div style={sectionLabel}>📑 슬라이드 관리</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+          {allPages.map((pg, i) => {
+            const smallBtn: React.CSSProperties = {
+              width: 22, height: 22, borderRadius: 4, border: 'none', cursor: 'pointer',
+              background: 'rgba(200,144,90,0.25)', color: '#6a4022',
+              fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            };
+            return (
+              <div key={i}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: i === currentPageIdx ? 'rgba(232,160,180,0.18)' : 'rgba(255,248,235,0.8)',
+                  border: `1px solid ${i === currentPageIdx ? 'rgba(232,160,180,0.5)' : 'rgba(200,144,90,0.2)'}`,
+                  borderRadius: 8, padding: '5px 7px', cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onClick={() => { onPageGoTo(i); onClose(); }}
+              >
+                <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'rgba(100,65,40,0.5)', minWidth: 20, flexShrink: 0 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span style={{
+                  flex: 1, fontSize: 11, color: '#6a4022',
+                  fontFamily: "'Noto Sans KR', sans-serif",
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {pg.subtitle || '(제목 없음)'}
+                </span>
+                <button onClick={(e) => { e.stopPropagation(); onPageMoveUp(i); }}
+                  style={{ ...smallBtn, opacity: i === 0 ? 0.3 : 1 }}
+                  disabled={i === 0}>↑</button>
+                <button onClick={(e) => { e.stopPropagation(); onPageMoveDown(i); }}
+                  style={{ ...smallBtn, opacity: i === allPages.length - 1 ? 0.3 : 1 }}
+                  disabled={i === allPages.length - 1}>↓</button>
+                <button onClick={(e) => { e.stopPropagation(); onPageDelete(i); }}
+                  style={{ ...smallBtn, background: allPages.length <= 1 ? 'rgba(180,180,180,0.3)' : 'rgba(220,60,60,0.75)', color: '#fff' }}
+                  disabled={allPages.length <= 1}>×</button>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={onPageAdd}
+          style={{
+            marginTop: 8, width: '100%', padding: '8px',
+            background: 'rgba(255,248,235,0.9)', border: '1px dashed rgba(200,144,90,0.4)',
+            borderRadius: 10, cursor: 'pointer',
+            fontFamily: "'Noto Sans KR', sans-serif", fontSize: 12, color: '#6a4022',
+          }}>
+          + 새 슬라이드 추가
+        </button>
       </div>
 
       {/* 도움말 */}
@@ -1272,27 +1353,24 @@ function EditPanel({
   );
 }
 
+const BLANK_PAGE: ScrapbookPage = { photos: [], subtitle: '새 페이지', stickers: [] };
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goToFirst }: Props) {
+export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goToFirst, onPageCountChange, onSlideIdxChange }: Props) {
   const [pages, setPages] = useState<ScrapbookPage[]>(() => {
     try {
       const raw = localStorage.getItem('scrapbook_layout');
       if (raw) {
         const saved = JSON.parse(raw) as ScrapbookPage[];
-        return SCRAPBOOK_PAGES.map((def, i) => ({
-          ...def,
-          photos: saved[i]?.photos ?? def.photos,
-          bgImage: saved[i]?.bgImage,
-          subtitleBg: saved[i]?.subtitleBg,
-          subtitleFontSize: saved[i]?.subtitleFontSize,
-          subtitleDesign: saved[i]?.subtitleDesign,
-          subtitleFont: saved[i]?.subtitleFont,
-          bgTheme: saved[i]?.bgTheme,
-          stickers: saved[i]?.stickers ?? [],
-        }));
+        // Use saved length as-is (supports variable page count)
+        return saved.map((sp, i) => {
+          const def: Partial<ScrapbookPage> = SCRAPBOOK_PAGES[i] ?? {};
+          const merged: ScrapbookPage = { photos: [], subtitle: '', stickers: [], ...def };
+          return { ...merged, ...sp, stickers: sp.stickers ?? merged.stickers };
+        });
       }
     } catch { /**/ }
-    return SCRAPBOOK_PAGES.map(p => ({ ...p }));
+    return SCRAPBOOK_PAGES.map(p => ({ ...p, stickers: p.stickers ?? [] }));
   });
 
   const [editMode, setEditMode] = useState(false);
@@ -1337,6 +1415,11 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
 
   // Stop BGM on unmount
   useEffect(() => () => { bgmRef.current?.pause(); }, []);
+
+  // Notify App.tsx whenever page count changes
+  useEffect(() => {
+    onPageCountChange?.(pages.length);
+  }, [pages.length, onPageCountChange]);
 
   const save = useCallback((next: ScrapbookPage[]) => {
     try { localStorage.setItem('scrapbook_layout', JSON.stringify(next)); } catch { /**/ }
@@ -1583,6 +1666,41 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
     setEditMode(true);
   }, [pendingStickerTypes, seqIdx, updatePages]);
 
+  // ── Page management ──────────────────────────────────────────────────────────
+  const onPageAdd = useCallback(() => {
+    updatePages(prev => [...prev, { ...BLANK_PAGE }]);
+    onSlideIdxChange?.(pages.length); // navigate to new last page
+  }, [pages.length, updatePages, onSlideIdxChange]);
+
+  const onPageDelete = useCallback((idx: number) => {
+    if (pages.length <= 1) return;
+    const newIdx = idx <= seqIdx ? Math.max(0, seqIdx - 1) : seqIdx;
+    updatePages(prev => prev.filter((_, i) => i !== idx));
+    onSlideIdxChange?.(newIdx);
+  }, [pages.length, seqIdx, updatePages, onSlideIdxChange]);
+
+  const onPageMoveUp = useCallback((idx: number) => {
+    if (idx === 0) return;
+    updatePages(prev => {
+      const arr = [...prev];
+      [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+      return arr;
+    });
+    if (idx === seqIdx) onSlideIdxChange?.(idx - 1);
+    else if (idx - 1 === seqIdx) onSlideIdxChange?.(idx);
+  }, [seqIdx, updatePages, onSlideIdxChange]);
+
+  const onPageMoveDown = useCallback((idx: number) => {
+    updatePages(prev => {
+      if (idx >= prev.length - 1) return prev;
+      const arr = [...prev];
+      [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+      return arr;
+    });
+    if (idx === seqIdx) onSlideIdxChange?.(idx + 1);
+    else if (idx + 1 === seqIdx) onSlideIdxChange?.(idx);
+  }, [seqIdx, updatePages, onSlideIdxChange]);
+
   // Add text card
   const onAddText = useCallback(() => {
     updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : {
@@ -1692,6 +1810,27 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
   const onStickerDelete = useCallback((id: string) => {
     updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : {
       ...pg, stickers: (pg.stickers ?? []).filter(s => s.id !== id),
+    }));
+  }, [seqIdx, updatePages]);
+
+  const onStickerReshuffle = useCallback(() => {
+    updatePages(prev => prev.map((pg, pi) => {
+      if (pi !== seqIdx) return pg;
+      const stickers = pg.stickers ?? [];
+      if (!stickers.length) return pg;
+      const reshuffled = stickers.map(s => {
+        const color = STICKER_COLORS[Math.floor(Math.random() * STICKER_COLORS.length)];
+        return {
+          ...s,
+          x: 10 + Math.random() * 70,
+          y: 10 + Math.random() * 65,
+          rotate: (Math.random() - 0.5) * 40,
+          size: 36 + Math.floor(Math.random() * 80),
+          color,
+          strokeColor: stickerStroke(color),
+        };
+      });
+      return { ...pg, stickers: reshuffled };
     }));
   }, [seqIdx, updatePages]);
 
@@ -1991,7 +2130,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
 
       {/* 마지막 씬 — 처음으로 가기 */}
       <AnimatePresence>
-        {seqIdx === 11 && !editMode && (
+        {seqIdx === pages.length - 1 && !editMode && (
           <motion.button
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
             transition={{ delay: 1.2, duration: 0.6 }}
@@ -2171,6 +2310,14 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             onStickerTypeToggle={onStickerTypeToggle}
             onStickerTypeSelectAll={onStickerTypeSelectAll}
             onPlaceStickers={onPlaceStickers}
+            onStickerReshuffle={onStickerReshuffle}
+            allPages={pages}
+            currentPageIdx={seqIdx}
+            onPageAdd={onPageAdd}
+            onPageDelete={onPageDelete}
+            onPageMoveUp={onPageMoveUp}
+            onPageMoveDown={onPageMoveDown}
+            onPageGoTo={(idx) => onSlideIdxChange?.(idx)}
           />
         )}
       </AnimatePresence>

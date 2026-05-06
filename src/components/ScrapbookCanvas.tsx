@@ -857,7 +857,8 @@ function StickerItem({
 
 // ── Upload / edit panel ───────────────────────────────────────────────────────
 function EditPanel({
-  seqIdx, onClose, onUpload, onAddText, onSetBgImage, bgTheme, onBgThemeChange, onStickerPointerDown,
+  seqIdx, onClose, onUpload, onAddText, onSetBgImage, bgTheme, onBgThemeChange,
+  globalDecoTheme, onGlobalDecoThemeChange, onStickerPointerDown,
 }: {
   seqIdx: number;
   onClose: () => void;
@@ -866,6 +867,8 @@ function EditPanel({
   onSetBgImage: (file: File) => void;
   bgTheme: string;
   onBgThemeChange: (key: string) => void;
+  globalDecoTheme: string;
+  onGlobalDecoThemeChange: (key: string) => void;
   onStickerPointerDown: (type: number, e: React.PointerEvent) => void;
 }) {
   const photoRef = useRef<HTMLInputElement>(null);
@@ -1024,6 +1027,38 @@ function EditPanel({
         </div>
       </div>
 
+      {/* 전체 배경 꾸밈요소 */}
+      <div>
+        <div style={sectionLabel}>✨ 배경 꾸밈요소 (전체 적용)</div>
+        <div style={{ fontSize: 10, color: 'rgba(100,65,40,0.45)', fontFamily: "'Noto Sans KR',sans-serif", marginBottom: 8 }}>
+          모든 페이지 배경에 공통으로 나타납니다
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {[
+            { key: 'off', label: '없음' },
+            { key: 'all', label: '전체' },
+            { key: 'hearts', label: '❤️' },
+            { key: 'stars', label: '✨' },
+            { key: 'nature', label: '🌸' },
+            { key: 'minimal', label: '◦' },
+          ].map(t => (
+            <button key={t.key} onClick={() => onGlobalDecoThemeChange(t.key)}
+              style={{
+                padding: '5px 12px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                background: globalDecoTheme === t.key
+                  ? 'rgba(232,160,180,0.85)' : 'rgba(255,248,235,0.9)',
+                color: globalDecoTheme === t.key ? '#fff' : '#6a4022',
+                fontFamily: "'Noto Sans KR', sans-serif", fontSize: 11,
+                outline: globalDecoTheme === t.key ? '2px solid rgba(232,160,180,0.6)' : 'none',
+                outlineOffset: 1,
+                transition: 'all 0.18s',
+                boxShadow: globalDecoTheme === t.key ? '0 2px 8px rgba(232,160,180,0.35)' : 'none',
+              }}
+            >{t.label}</button>
+          ))}
+        </div>
+      </div>
+
       {/* 스티커 / 꾸밈요소 추가 */}
       <div>
         <div style={sectionLabel}>🎀 스티커 · 꾸밈요소</div>
@@ -1108,6 +1143,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
 
   const [editMode, setEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [globalDecoTheme, setGlobalDecoTheme] = useState<string>(() => localStorage.getItem('scrapbook_deco_theme') ?? 'off');
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
   const [formatPainter, setFormatPainter] = useState<{ id: string; width: number; rotate: number } | null>(null);
@@ -1159,7 +1195,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
 
   const handlePageClick = useCallback(() => {
     if (formatPainter) { setFormatPainter(null); return; }
-    if (editMode) { setSelectedId(null); return; }
+    if (editMode) { setSelectedId(null); setEditingSubtitle(false); return; }
     if (!bgmStarted.current && bgmSrc) {
       bgmStarted.current = true;
       bgmRef.current?.play().catch(() => {});
@@ -1227,6 +1263,11 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
   const onDecoThemeChange = useCallback((theme: string) => {
     updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : { ...pg, decoTheme: theme }));
   }, [seqIdx, updatePages]);
+
+  const onGlobalDecoThemeChange = useCallback((theme: string) => {
+    setGlobalDecoTheme(theme);
+    localStorage.setItem('scrapbook_deco_theme', theme);
+  }, []);
 
   const onBgThemeChange = useCallback((key: string) => {
     updatePages(prev => prev.map((pg, pi) => pi !== seqIdx ? pg : { ...pg, bgTheme: key }));
@@ -1451,6 +1492,11 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
       }} />
 
 
+      {/* Global background decorations */}
+      {globalDecoTheme !== 'off' && (
+        <BackgroundDecorations seqIdx={seqIdx} theme={globalDecoTheme} />
+      )}
+
       {/* Ruled lines */}
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} style={{
@@ -1536,8 +1582,8 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
         zIndex: 50, pointerEvents: 'none',
       }}>
-        {/* Subtitle toolbar — edit mode only */}
-        {editMode && (
+        {/* Subtitle toolbar — 자막 선택 시만 표시 */}
+        {editMode && selectedId === 'subtitle' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'auto' }}
             onClick={(e) => e.stopPropagation()}>
             <div style={{
@@ -1604,6 +1650,19 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
                   fontSize: 10, fontFamily: "'Noto Sans KR', sans-serif",
                   letterSpacing: '0.5px', whiteSpace: 'nowrap',
                 }}>전체 적용</button>
+
+              <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
+
+              {/* Close / save */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditingSubtitle(false); setSelectedId(null); }}
+                style={{
+                  width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                  background: 'rgba(232,160,180,0.85)', color: '#fff', fontSize: 13,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                title="저장 후 닫기"
+              >✓</button>
             </div>
           </div>
         )}
@@ -1629,7 +1688,7 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
               cursor: editMode ? 'text' : 'default',
               pointerEvents: editMode ? 'auto' : 'none',
             }}
-            onClick={(e) => { e.stopPropagation(); if (editMode) setEditingSubtitle(true); }}
+            onClick={(e) => { e.stopPropagation(); if (editMode) { setSelectedId('subtitle'); setEditingSubtitle(true); } }}
           >
             {editingSubtitle ? (
               <input
@@ -1863,6 +1922,8 @@ export default function ScrapbookCanvas({ seqIdx, nextSection, setAutoPlay, goTo
             onSetBgImage={onSetBgImage}
             bgTheme={currentPage?.bgTheme ?? 'cream'}
             onBgThemeChange={onBgThemeChange}
+            globalDecoTheme={globalDecoTheme}
+            onGlobalDecoThemeChange={onGlobalDecoThemeChange}
             onStickerPointerDown={handleStickerPointerDown}
           />
         )}
